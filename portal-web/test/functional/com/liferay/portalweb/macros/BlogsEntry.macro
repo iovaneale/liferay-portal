@@ -450,6 +450,14 @@
 		<execute function="Click" locator1="Ratings#THUMBS_UP" />
 	</command>
 
+	<command name="removeCoverImage">
+		<execute function="AssertElementPresent" locator1="BlogsEditEntry#COVER_IMAGE" />
+
+		<execute function="Click" locator1="BlogsEditEntry#DELETE_COVER_IMAGE_BUTTON" />
+
+		<execute macro="PortletEntry#publish" />
+	</command>
+
 	<command name="removeViewPermissionsPG">
 		<var name="key_assetHeader" value="${entryTitle}" />
 		<var method="StringUtil#replace('${roleTitle}', ' ', '-')" name="key_roleTitle" />
