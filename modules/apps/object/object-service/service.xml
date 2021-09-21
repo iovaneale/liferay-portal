@@ -57,9 +57,10 @@
 			<finder-column name="system" />
 			<finder-column name="status" />
 		</finder>
-		<finder name="C_A_S" return-type="Collection">
+		<finder name="C_A_S_S" return-type="Collection">
 			<finder-column name="companyId" />
 			<finder-column name="active" />
+			<finder-column name="system" />
 			<finder-column name="status" />
 		</finder>
 
@@ -244,6 +245,7 @@
 		<column name="objectFieldId" type="long" />
 		<column name="objectLayoutRowId" type="long" />
 		<column name="priority" type="int" />
+		<column name="size" type="int" />
 
 		<!-- Finder methods -->
 
@@ -364,6 +366,7 @@
 		<exception>ObjectFieldLabel</exception>
 		<exception>ObjectFieldName</exception>
 		<exception>ObjectFieldType</exception>
+		<exception>ObjectLayoutColumnSize</exception>
 		<exception>ObjectRelationshipName</exception>
 		<exception>ObjectRelationshipType</exception>
 		<exception>RequiredObjectDefinition</exception>

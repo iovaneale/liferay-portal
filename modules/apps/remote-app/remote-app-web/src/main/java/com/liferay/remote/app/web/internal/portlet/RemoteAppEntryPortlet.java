@@ -21,6 +21,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.servlet.taglib.aui.ScriptData;
 import com.liferay.portal.kernel.servlet.taglib.util.OutputData;
+import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.remote.app.constants.RemoteAppConstants;
@@ -156,10 +157,20 @@ public class RemoteAppEntryPortlet extends MVCPortlet {
 
 		PrintWriter printWriter = renderResponse.getWriter();
 
-		printWriter.print(
-			StringBundler.concat(
-				"<iframe src=\"", _remoteAppEntry.getIFrameURL(),
-				"\"></iframe>"));
+		printWriter.print("<iframe src=\"");
+
+		String iFrameURL = _remoteAppEntry.getIFrameURL();
+
+		Properties properties = _getProperties(renderRequest);
+
+		for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+			iFrameURL = HttpUtil.addParameter(
+				iFrameURL, (String)entry.getKey(), (String)entry.getValue());
+		}
+
+		printWriter.print(iFrameURL);
+
+		printWriter.print("\"></iframe>");
 
 		printWriter.flush();
 	}

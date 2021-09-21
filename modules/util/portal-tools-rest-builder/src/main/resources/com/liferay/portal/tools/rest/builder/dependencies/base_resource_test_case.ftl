@@ -1249,12 +1249,6 @@ public abstract class Base${schemaName}ResourceTestCase {
 				<#if !properties?keys?seq_contains("id")>
 					Assert.assertTrue(false);
 				<#else>
-					<#if javaMethodSignature.methodName?ends_with("ByExternalReferenceCodeDiagram") &&
-						 stringUtil.equals(configYAML.apiPackagePath, "com.liferay.headless.commerce.admin.catalog") &&
-						 stringUtil.equals(schemaName, "Diagram")>
-
-						@SuppressWarnings("PMD.UnusedLocalVariable")
-					</#if>
 					${schemaName} post${schemaName} = test${javaMethodSignature.methodName?cap_first}_add${schemaName}();
 
 					${schemaName} random${schemaName} = random${schemaName}();
@@ -2550,8 +2544,6 @@ public abstract class Base${schemaName}ResourceTestCase {
 			put${schemaName}.getId()
 		<#elseif freeMarkerTool.isPathParameter(javaMethodParameter, javaMethodSignature.operation) && properties?keys?seq_contains(javaMethodParameter.parameterName)>
 			put${schemaName}.get${javaMethodParameter.parameterName?cap_first}()
-		<#else>
-			null
 		</#if>
 
 		<#sep>, </#sep>

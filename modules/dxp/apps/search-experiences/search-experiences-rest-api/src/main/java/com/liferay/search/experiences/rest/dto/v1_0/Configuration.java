@@ -84,20 +84,20 @@ public class Configuration implements Serializable {
 
 	@Schema
 	@Valid
-	public Aggregration getAggregration() {
-		return aggregration;
+	public Map<String, ?> getAggregations() {
+		return aggregations;
 	}
 
-	public void setAggregration(Aggregration aggregration) {
-		this.aggregration = aggregration;
+	public void setAggregations(Map<String, ?> aggregations) {
+		this.aggregations = aggregations;
 	}
 
 	@JsonIgnore
-	public void setAggregration(
-		UnsafeSupplier<Aggregration, Exception> aggregrationUnsafeSupplier) {
+	public void setAggregations(
+		UnsafeSupplier<Map<String, ?>, Exception> aggregationsUnsafeSupplier) {
 
 		try {
-			aggregration = aggregrationUnsafeSupplier.get();
+			aggregations = aggregationsUnsafeSupplier.get();
 		}
 		catch (RuntimeException re) {
 			throw re;
@@ -109,7 +109,7 @@ public class Configuration implements Serializable {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected Aggregration aggregration;
+	protected Map<String, ?> aggregations;
 
 	@Schema
 	@Valid
@@ -196,6 +196,35 @@ public class Configuration implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Highlight highlight;
 
+	@Schema
+	@Valid
+	public Query[] getQueries() {
+		return queries;
+	}
+
+	public void setQueries(Query[] queries) {
+		this.queries = queries;
+	}
+
+	@JsonIgnore
+	public void setQueries(
+		UnsafeSupplier<Query[], Exception> queriesUnsafeSupplier) {
+
+		try {
+			queries = queriesUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Query[] queries;
+
 	@Override
 	public boolean equals(Object object) {
 		if (this == object) {
@@ -233,14 +262,14 @@ public class Configuration implements Serializable {
 			sb.append(String.valueOf(advanced));
 		}
 
-		if (aggregration != null) {
+		if (aggregations != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"aggregration\": ");
+			sb.append("\"aggregations\": ");
 
-			sb.append(String.valueOf(aggregration));
+			sb.append(_toJSON(aggregations));
 		}
 
 		if (facet != null) {
@@ -271,6 +300,26 @@ public class Configuration implements Serializable {
 			sb.append("\"highlight\": ");
 
 			sb.append(String.valueOf(highlight));
+		}
+
+		if (queries != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"queries\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < queries.length; i++) {
+				sb.append(String.valueOf(queries[i]));
+
+				if ((i + 1) < queries.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		sb.append("}");

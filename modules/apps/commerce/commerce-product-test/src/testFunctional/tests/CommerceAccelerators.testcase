@@ -6,8 +6,6 @@ definition {
 	property testray.main.component.name = "Shopping Experience";
 
 	setUp {
-		TestCase.setUpPortalInstance();
-
 		User.firstLoginPG();
 
 		PortalSettings.gotoConfiguration(
@@ -21,12 +19,6 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		if ("${testPortalInstance}" == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
 			Navigator.openURL();
 
 			CommerceConfiguration.commerceAdminTearDown(userScreenName = "buyer");
@@ -34,14 +26,12 @@ definition {
 			CommerceConfiguration.commerceInitializersTearDown();
 
 			User.logoutPG();
-		}
 	}
 
 	@description = "COMMERCE-5725. New functional test for COMMERCE-5485"
 	@priority = "3"
 	test AssertCheckoutMinicart {
-		property portal.acceptance = "false";
-		property test.name.skip.portal.instance = "CommerceAccelerators#AssertCheckoutMinicart";
+		property portal.acceptance = "testPr";
 
 		// TODO Review
 
@@ -154,8 +144,7 @@ definition {
 	@description = "This is a test for COMMERCE-5530. AssertPromoProductPriceTotalIsDifferent"
 	@priority = "3"
 	test AssertPromoProductPriceTotalIsDifferent {
-		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "CommerceAccelerators#AssertPromoProductPriceTotalIsDifferent";
+		property portal.acceptance = "testPr";
 
 		// TODO Review
 
@@ -188,8 +177,7 @@ definition {
 
 	@description = "This is a test for COMMERCE-4958."
 	test CheckoutWithOneShippingOption {
-		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "CommerceAccelerators#CheckoutWithOneShippingOption";
+		property portal.acceptance = "testPr";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Speedwell");
 
@@ -244,7 +232,6 @@ definition {
 	test DeactivateCommerceAccount {
 		property portal.acceptance = "quarantine";
 		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "CommerceAccelerators#DeactivateCommerceAccount";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
@@ -325,8 +312,7 @@ definition {
 
 	@description = "This is a workaround for an issue with Minium's sidebar on CI"
 	test DeactivateCommerceAccountAdminLogOut {
-		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "CommerceAccelerators#DeactivateCommerceAccount";
+		property portal.acceptance = "testPr";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
@@ -407,8 +393,7 @@ definition {
 
 	test InitializeNewMiniumSite {
 		property environment.acceptance = "true";
-		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "CommerceAccelerators#InitializeNewMiniumSite";
+		property portal.acceptance = "testPr";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
@@ -463,8 +448,7 @@ definition {
 
 	test InitializeNewSpeedwellSite {
 		property environment.acceptance = "true";
-		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "CommerceAccelerators#InitializeNewSpeedwellSite";
+		property portal.acceptance = "testPr";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Speedwell");
 
@@ -520,7 +504,6 @@ definition {
 	test MiniumSiteFullFlow {
 		property portal.acceptance = "quarantine";
 		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "CommerceAccelerators#MiniumSiteFullFlow";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
@@ -668,8 +651,7 @@ definition {
 
 	@description = "This is a workaround for an issue with Minium's sidebar on CI"
 	test MiniumSiteFullFlowCheckingOutViaOrderDetails {
-		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "CommerceAccelerators#MiniumSiteFullFlowCheckingOutViaOrderDetails";
+		property portal.acceptance = "testPr";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
@@ -826,8 +808,7 @@ definition {
 	}
 
 	test SpeedwellSiteFullFlow {
-		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "CommerceAccelerators#SpeedwellSiteFullFlow";
+		property portal.acceptance = "testPr";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Speedwell");
 

@@ -20,6 +20,7 @@ import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.cluster.Clusterable;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
@@ -32,9 +33,11 @@ import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.remote.app.constants.RemoteAppConstants;
@@ -52,6 +55,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.framework.BundleContext;
@@ -75,7 +79,7 @@ public class RemoteAppEntryLocalServiceImpl
 	public RemoteAppEntry addCustomElementRemoteAppEntry(
 			long userId, String customElementCSSURLs,
 			String customElementHTMLElementName, String customElementURLs,
-			Map<Locale, String> nameMap)
+			Map<Locale, String> nameMap, String portletCategoryName)
 		throws PortalException {
 
 		customElementCSSURLs = StringUtil.trim(customElementCSSURLs);
@@ -101,9 +105,12 @@ public class RemoteAppEntryLocalServiceImpl
 			customElementHTMLElementName);
 		remoteAppEntry.setCustomElementURLs(customElementURLs);
 		remoteAppEntry.setNameMap(nameMap);
+		remoteAppEntry.setPortletCategoryName(portletCategoryName);
 		remoteAppEntry.setType(RemoteAppConstants.TYPE_CUSTOM_ELEMENT);
 
 		remoteAppEntry = remoteAppEntryPersistence.update(remoteAppEntry);
+
+		_addResources(remoteAppEntry);
 
 		remoteAppEntryLocalService.deployRemoteAppEntry(remoteAppEntry);
 
@@ -113,7 +120,8 @@ public class RemoteAppEntryLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public RemoteAppEntry addIFrameRemoteAppEntry(
-			long userId, String iFrameURL, Map<Locale, String> nameMap)
+			long userId, String iFrameURL, Map<Locale, String> nameMap,
+			String portletCategoryName)
 		throws PortalException {
 
 		iFrameURL = StringUtil.trim(iFrameURL);
@@ -131,9 +139,12 @@ public class RemoteAppEntryLocalServiceImpl
 
 		remoteAppEntry.setIFrameURL(iFrameURL);
 		remoteAppEntry.setNameMap(nameMap);
+		remoteAppEntry.setPortletCategoryName(portletCategoryName);
 		remoteAppEntry.setType(RemoteAppConstants.TYPE_IFRAME);
 
 		remoteAppEntry = remoteAppEntryPersistence.update(remoteAppEntry);
+
+		_addResources(remoteAppEntry);
 
 		remoteAppEntryLocalService.deployRemoteAppEntry(remoteAppEntry);
 
@@ -155,6 +166,11 @@ public class RemoteAppEntryLocalServiceImpl
 		throws PortalException {
 
 		remoteAppEntryPersistence.remove(remoteAppEntry);
+
+		_resourceLocalService.deleteResource(
+			remoteAppEntry.getCompanyId(), RemoteAppEntry.class.getName(),
+			ResourceConstants.SCOPE_INDIVIDUAL,
+			remoteAppEntry.getRemoteAppEntryId());
 
 		remoteAppEntryLocalService.undeployRemoteAppEntry(remoteAppEntry);
 
@@ -229,19 +245,20 @@ public class RemoteAppEntryLocalServiceImpl
 			_serviceRegistrationsMaps.remove(
 				remoteAppEntry.getRemoteAppEntryId());
 
-		for (ServiceRegistration<?> serviceRegistration :
-				serviceRegistrations) {
+		if (serviceRegistrations != null) {
+			for (ServiceRegistration<?> serviceRegistration :
+					serviceRegistrations) {
 
-			serviceRegistration.unregister();
+				serviceRegistration.unregister();
+			}
 		}
 	}
 
 	@Indexable(type = IndexableType.REINDEX)
-	@Override
 	public RemoteAppEntry updateCustomElementRemoteAppEntry(
 			long remoteAppEntryId, String customElementCSSURLs,
 			String customElementHTMLElementName, String customElementURLs,
-			Map<Locale, String> nameMap)
+			Map<Locale, String> nameMap, String portletCategoryName)
 		throws PortalException {
 
 		customElementCSSURLs = StringUtil.trim(customElementCSSURLs);
@@ -261,6 +278,7 @@ public class RemoteAppEntryLocalServiceImpl
 			customElementHTMLElementName);
 		remoteAppEntry.setCustomElementURLs(customElementURLs);
 		remoteAppEntry.setNameMap(nameMap);
+		remoteAppEntry.setPortletCategoryName(portletCategoryName);
 
 		remoteAppEntry = remoteAppEntryPersistence.update(remoteAppEntry);
 
@@ -273,7 +291,7 @@ public class RemoteAppEntryLocalServiceImpl
 	@Override
 	public RemoteAppEntry updateIFrameRemoteAppEntry(
 			long remoteAppEntryId, String iFrameURL,
-			Map<Locale, String> nameMap)
+			Map<Locale, String> nameMap, String portletCategoryName)
 		throws PortalException {
 
 		iFrameURL = StringUtil.trim(iFrameURL);
@@ -285,6 +303,7 @@ public class RemoteAppEntryLocalServiceImpl
 
 		remoteAppEntry.setIFrameURL(iFrameURL);
 		remoteAppEntry.setNameMap(nameMap);
+		remoteAppEntry.setPortletCategoryName(portletCategoryName);
 
 		remoteAppEntry = remoteAppEntryPersistence.update(remoteAppEntry);
 
@@ -296,6 +315,15 @@ public class RemoteAppEntryLocalServiceImpl
 	@Activate
 	protected void activate(BundleContext bundleContext) {
 		_bundleContext = bundleContext;
+	}
+
+	private void _addResources(RemoteAppEntry remoteAppEntry)
+		throws PortalException {
+
+		_resourceLocalService.addResources(
+			remoteAppEntry.getCompanyId(), 0, remoteAppEntry.getUserId(),
+			RemoteAppEntry.class.getName(),
+			remoteAppEntry.getRemoteAppEntryId(), false, true, true);
 	}
 
 	private SearchContext _buildSearchContext(
@@ -400,12 +428,13 @@ public class RemoteAppEntryLocalServiceImpl
 			}
 
 			if ((Validator.isChar(c) && Character.isLowerCase(c)) ||
-				(c == CharPool.DASH)) {
+				Validator.isNumber(String.valueOf(c)) || (c == CharPool.DASH) ||
+				(c == CharPool.PERIOD) || (c == CharPool.UNDERLINE)) {
 			}
 			else {
 				throw new RemoteAppEntryCustomElementHTMLElementNameException(
-					"Custom element HTML element name must only contain " +
-						"lowercase letters or hyphens");
+					"Custom element HTML element name contains an invalid " +
+						"character");
 			}
 		}
 
@@ -413,6 +442,14 @@ public class RemoteAppEntryLocalServiceImpl
 			throw new RemoteAppEntryCustomElementHTMLElementNameException(
 				"Custom element HTML element name must contain at least one " +
 					"hyphen");
+		}
+
+		if (_reservedCustomElementHTMLElementNames.contains(
+				customElementHTMLElementName)) {
+
+			throw new RemoteAppEntryCustomElementHTMLElementNameException(
+				"Reserved custom element HTML element name " +
+					customElementHTMLElementName);
 		}
 
 		if (Validator.isNull(customElementURLs)) {
@@ -439,6 +476,17 @@ public class RemoteAppEntryLocalServiceImpl
 
 	@Reference
 	private RemoteAppEntryDeployer _remoteAppEntryDeployer;
+
+	private final Set<String> _reservedCustomElementHTMLElementNames =
+		SetUtil.fromArray(
+			new String[] {
+				"annotation-xml", "color-profile", "font-face",
+				"font-face-format", "font-face-name", "font-face-src",
+				"font-face-uri", "missing-glyph"
+			});
+
+	@Reference
+	private ResourceLocalService _resourceLocalService;
 
 	private final Map<Long, List<ServiceRegistration<?>>>
 		_serviceRegistrationsMaps = new ConcurrentHashMap<>();

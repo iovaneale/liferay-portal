@@ -16,6 +16,10 @@ package com.liferay.remote.app.service.impl;
 
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
+import com.liferay.remote.app.constants.RemoteAppConstants;
 import com.liferay.remote.app.model.RemoteAppEntry;
 import com.liferay.remote.app.service.base.RemoteAppEntryServiceBaseImpl;
 
@@ -23,6 +27,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Brian Wing Shun Chan
@@ -39,26 +44,48 @@ public class RemoteAppEntryServiceImpl extends RemoteAppEntryServiceBaseImpl {
 	@Override
 	public RemoteAppEntry addCustomElementRemoteAppEntry(
 			String customElementCSSURLs, String customElementHTMLElementName,
-			String customElementURLs, Map<Locale, String> nameMap)
+			String customElementURLs, Map<Locale, String> nameMap,
+			String portletCategoryName)
 		throws PortalException {
+
+		_portletResourcePermission.check(
+			getPermissionChecker(), null, ActionKeys.ADD_ENTRY);
 
 		return remoteAppEntryLocalService.addCustomElementRemoteAppEntry(
 			getUserId(), customElementCSSURLs, customElementHTMLElementName,
-			customElementURLs, nameMap);
+			customElementURLs, nameMap, portletCategoryName);
 	}
 
 	@Override
 	public RemoteAppEntry addIFrameRemoteAppEntry(
-			String iFrameURL, Map<Locale, String> nameMap)
+			String iFrameURL, Map<Locale, String> nameMap,
+			String portletCategoryName)
 		throws PortalException {
 
+		_portletResourcePermission.check(
+			getPermissionChecker(), null, ActionKeys.ADD_ENTRY);
+
 		return remoteAppEntryLocalService.addIFrameRemoteAppEntry(
-			getUserId(), iFrameURL, nameMap);
+			getUserId(), iFrameURL, nameMap, portletCategoryName);
+	}
+
+	@Override
+	public RemoteAppEntry deleteRemoteAppEntry(long remoteAppEntryId)
+		throws PortalException {
+
+		_remoteAppEntryModelResourcePermission.check(
+			getPermissionChecker(), remoteAppEntryId, ActionKeys.DELETE);
+
+		return remoteAppEntryLocalService.deleteRemoteAppEntry(
+			remoteAppEntryId);
 	}
 
 	@Override
 	public RemoteAppEntry getRemoteAppEntry(long remoteAppEntryId)
 		throws PortalException {
+
+		_remoteAppEntryModelResourcePermission.check(
+			getPermissionChecker(), remoteAppEntryId, ActionKeys.VIEW);
 
 		return remoteAppEntryLocalService.getRemoteAppEntry(remoteAppEntryId);
 	}
@@ -67,22 +94,40 @@ public class RemoteAppEntryServiceImpl extends RemoteAppEntryServiceBaseImpl {
 	public RemoteAppEntry updateCustomElementRemoteAppEntry(
 			long remoteAppEntryId, String customElementCSSURLs,
 			String customElementHTMLElementName, String customElementURLs,
-			Map<Locale, String> nameMap)
+			Map<Locale, String> nameMap, String portletCategoryName)
 		throws PortalException {
+
+		_remoteAppEntryModelResourcePermission.check(
+			getPermissionChecker(), remoteAppEntryId, ActionKeys.UPDATE);
 
 		return remoteAppEntryLocalService.updateCustomElementRemoteAppEntry(
 			remoteAppEntryId, customElementCSSURLs,
-			customElementHTMLElementName, customElementURLs, nameMap);
+			customElementHTMLElementName, customElementURLs, nameMap,
+			portletCategoryName);
 	}
 
 	@Override
 	public RemoteAppEntry updateIFrameRemoteAppEntry(
 			long remoteAppEntryId, String iFrameURL,
-			Map<Locale, String> nameMap)
+			Map<Locale, String> nameMap, String portletCategoryName)
 		throws PortalException {
 
+		_remoteAppEntryModelResourcePermission.check(
+			getPermissionChecker(), remoteAppEntryId, ActionKeys.UPDATE);
+
 		return remoteAppEntryLocalService.updateIFrameRemoteAppEntry(
-			remoteAppEntryId, iFrameURL, nameMap);
+			remoteAppEntryId, iFrameURL, nameMap, portletCategoryName);
 	}
+
+	@Reference(
+		target = "(resource.name=" + RemoteAppConstants.RESOURCE_NAME + ")"
+	)
+	private PortletResourcePermission _portletResourcePermission;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.remote.app.model.RemoteAppEntry)"
+	)
+	private ModelResourcePermission<RemoteAppEntry>
+		_remoteAppEntryModelResourcePermission;
 
 }

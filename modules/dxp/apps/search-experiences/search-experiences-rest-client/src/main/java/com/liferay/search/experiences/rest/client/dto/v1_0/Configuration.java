@@ -19,6 +19,7 @@ import com.liferay.search.experiences.rest.client.serdes.v1_0.ConfigurationSerDe
 
 import java.io.Serializable;
 
+import java.util.Map;
 import java.util.Objects;
 
 import javax.annotation.Generated;
@@ -55,26 +56,26 @@ public class Configuration implements Cloneable, Serializable {
 
 	protected Advanced advanced;
 
-	public Aggregration getAggregration() {
-		return aggregration;
+	public Map<String, ?> getAggregations() {
+		return aggregations;
 	}
 
-	public void setAggregration(Aggregration aggregration) {
-		this.aggregration = aggregration;
+	public void setAggregations(Map<String, ?> aggregations) {
+		this.aggregations = aggregations;
 	}
 
-	public void setAggregration(
-		UnsafeSupplier<Aggregration, Exception> aggregrationUnsafeSupplier) {
+	public void setAggregations(
+		UnsafeSupplier<Map<String, ?>, Exception> aggregationsUnsafeSupplier) {
 
 		try {
-			aggregration = aggregrationUnsafeSupplier.get();
+			aggregations = aggregationsUnsafeSupplier.get();
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	protected Aggregration aggregration;
+	protected Map<String, ?> aggregations;
 
 	public Facet getFacet() {
 		return facet;
@@ -136,6 +137,27 @@ public class Configuration implements Cloneable, Serializable {
 	}
 
 	protected Highlight highlight;
+
+	public Query[] getQueries() {
+		return queries;
+	}
+
+	public void setQueries(Query[] queries) {
+		this.queries = queries;
+	}
+
+	public void setQueries(
+		UnsafeSupplier<Query[], Exception> queriesUnsafeSupplier) {
+
+		try {
+			queries = queriesUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Query[] queries;
 
 	@Override
 	public Configuration clone() throws CloneNotSupportedException {
