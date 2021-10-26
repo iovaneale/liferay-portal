@@ -96,6 +96,16 @@
 		<td></td>
 	</tr>
 	<tr>
+		<td>SEARCH_RELATIONSHIP_ENTRY</td>
+		<td>//input[contains(@placeholder,'Search')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>SEARCH_RESULT_RELATIONSHIP_ENTRY</td>
+		<td>//button[contains(@class,'dropdown-item')]//span[contains(text(),'${key_entry}')]</td>
+		<td></td>
+	</tr>
+	<tr>
 		<td>SELECT_CUSTOM_OBJECT</td>
 		<td>//div[(@class='table-list-title') and contains (.,'${key_label}')]</td>
 		<td></td>
@@ -118,6 +128,11 @@
 	<tr>
 		<td>VIEW_ENTRY_DETAILS_VALUE</td>
 		<td>//input[contains(@value, '${key_entryValue}')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>ADD_OBJECT_ENTRY</td>
+		<td>//input[@class='form-control']|//input[@class='form-control input-group-inset input-group-inset-after']</td>
 		<td></td>
 	</tr>
 </tbody>

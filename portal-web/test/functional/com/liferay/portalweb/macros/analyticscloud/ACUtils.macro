@@ -1,5 +1,19 @@
 definition {
 
+	macro addPage {
+		if (!(isSet(siteName))) {
+			siteName = "Site Name";
+		}
+
+		if (!(isSet(layoutName))) {
+			layoutName = "AC Page";
+		}
+
+		JSONLayout.addPublicLayout(
+			groupName = "${siteName}",
+			layoutName = "${layoutName}");
+	}
+
 	macro addSiteAndPage {
 		if (!(isSet(siteName))) {
 			siteName = "Site Name";
@@ -11,9 +25,9 @@ definition {
 			layoutName = "AC Page";
 		}
 
-		JSONLayout.addPublicLayout(
-			groupName = "${siteName}",
-			layoutName = "${layoutName}");
+		ACUtils.addPage(
+			layoutName = "${layoutName}",
+			siteName = "${siteName}");
 	}
 
 	macro addWidgetToPage {

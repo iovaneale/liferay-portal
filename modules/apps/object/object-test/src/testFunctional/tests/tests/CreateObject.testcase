@@ -956,6 +956,7 @@ definition {
 	}
 
 	@description = "LPS-135389 - Verify it is possible to set a different language value for a Field Label"
+	@ignore = "true"
 	@priority = "4"
 	test CanSetDifferentLanguageForFieldLabel {
 		ObjectAdmin.addObjectViaAPI(
@@ -1085,12 +1086,80 @@ definition {
 	}
 
 	@description = "LPS-139005 - Verify that is possible to submit entries in a form with an Object that was reactivated"
-	@ignore = "Test Stub"
 	@priority = "4"
 	test CanSubmitEntriesOnFormWhenReactivated {
+		ObjectAdmin.addObjectViaAPI(
+			labelName = "Custom Object",
+			objectName = "CustomObject",
+			pluralLabelName = "Custom Objects");
 
-		// TODO LPS-140884 CanSubmitEntriesOnFormWhenReactivated pending implementation
+		ObjectAdmin.addObjectFieldViaAPI(
+			fieldLabelName = "Custom Field",
+			fieldName = "customObjectField",
+			fieldType = "String",
+			isRequired = "false",
+			objectName = "CustomObject");
 
+		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject");
+
+		PopulateObjectFormsConfiguration.openForm();
+
+		FormsAdminNavigator.gotoAddForm();
+
+		Form.editName(formName = "Form 1");
+
+		PopulateObjectFormsConfiguration.openFormSettings();
+
+		PopulateObjectFormsConfiguration.selectObject(label = "Object");
+
+		PopulateObjectFormsConfiguration.selectCustomObject(label = "Custom Object");
+
+		Form.gotoAddField(fieldType = "Text");
+
+		PopulateObjectFormsConfiguration.mapFormField(fieldLabelName = "Custom Field");
+
+		Form.save();
+
+		Form.publishForm();
+
+		ObjectAdmin.openObjectAdmin();
+
+		ObjectPortlet.selectCustomObject(label = "Custom Object");
+
+		CreateObject.checkToggleInactive();
+
+		CreateObject.saveObject();
+
+		CreateObject.checkToggleActive();
+
+		CreateObject.saveObject();
+
+		Navigator.openURL();
+
+		PopulateObjectFormsConfiguration.openForm();
+
+		AssertElementNotPresent(
+			key_text = "exclamation-full",
+			locator1 = "Icon#ANY");
+
+		FormsAdminNavigator.gotoEditFormByName(formName = "Form 1");
+
+		FormsAdminNavigator.openPublishURL();
+
+		FormFields.editText(
+			fieldLabel = "Text",
+			fieldName = "Text",
+			fieldValue = "Entry 1");
+
+		AssertClick(
+			locator1 = "Button#MAIN_CONTENT_SUBMIT",
+			value1 = "Submit");
+
+		Navigator.openURL();
+
+		ObjectAdmin.goToCustomObject(objectName = "CustomObject");
+
+		ObjectPortlet.viewEntry(entry = "Entry 1");
 	}
 
 	@description = "LPS-135635 - Verify it is possible to update the Label of a Field after the Object is published"
@@ -1830,12 +1899,28 @@ definition {
 	}
 
 	@description = "LPS-139005 - Verify that the Object is no longer displayed on the Collection Providers when inactivated"
-	@ignore = "Test Stub"
 	@priority = "4"
 	test ObjectDisappearsCollectionProvidersWhenInactivated {
+		ObjectAdmin.addObjectViaAPI(
+			labelName = "Custom Object",
+			objectName = "CustomObject",
+			pluralLabelName = "Custom Objects");
 
-		// TODO LPS-140860 ObjectDisappearsCollectionProvidersWhenInactivated pending implementation
+		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject");
 
+		ObjectAdmin.openObjectAdmin();
+
+		ObjectPortlet.selectCustomObject(label = "Custom Object");
+
+		CreateObject.checkToggleInactive();
+
+		CreateObject.saveObject();
+
+		VisualizeObjectCollectionDisplay.openObjectCollectionProvider();
+
+		AssertElementNotPresent(
+			key_labelName = "Custom Objects",
+			locator1 = "VisualizeObjectCollectionDisplay#VIEW_OBJECT_COLLECTION_DISPLAY");
 	}
 
 	@description = "LPS-139005 - Verify that the Object is no longer displayed on the Page Item Selector when inactivated"
@@ -1857,12 +1942,59 @@ definition {
 	}
 
 	@description = "LPS-139005 - Verify that the Object is no longer displayed on the Workflow Process Builder page when inactivated"
-	@ignore = "Test Stub"
 	@priority = "4"
 	test ObjectDisappearsProcessBuilderWhenInactivated {
+		ObjectAdmin.addObjectViaAPI(
+			labelName = "Custom Object",
+			objectName = "CustomObject",
+			pluralLabelName = "Custom Objects");
 
-		// TODO LPS-140858 ObjectDisappearsProcessBuilderWhenInactivated pending implementation
+		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject");
 
+		ObjectAdmin.openObjectAdmin();
+
+		ObjectPortlet.selectCustomObject(label = "Custom Object");
+
+		CreateObject.checkToggleInactive();
+
+		CreateObject.saveObject();
+
+		ObjectAdmin.openWorkflowProcessBuilderConfiguration();
+
+		AssertElementNotPresent(
+			key_workflowResourceValue = "Custom Object",
+			locator1 = "WorkflowConfiguration#RESOURCE_TABLE_WORKFLOW");
+	}
+
+	@description = "LPS-139005 - Verify that the Object is no longer displayed on the Workflow Site Menu page when inactivated"
+	@priority = "4"
+	test ObjectDisappearsWorkflowSiteMenuWhenInactivated {
+		ObjectAdmin.addObjectViaAPI(
+			labelName = "Custom Object",
+			objectName = "CustomObject",
+			panelCategoryKey = "Site Administration > Content & Data",
+			pluralLabelName = "Custom Objects",
+			scope = "Site");
+
+		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject");
+
+		ObjectAdmin.openObjectAdmin();
+
+		ObjectPortlet.selectCustomObject(label = "Custom Object");
+
+		CreateObject.checkToggleInactive();
+
+		CreateObject.saveObject();
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Configuration",
+			portlet = "Workflow");
+
+		AssertElementNotPresent(
+			key_workflowResourceValue = "Custom Object",
+			locator1 = "WorkflowConfiguration#RESOURCE_TABLE_WORKFLOW");
 	}
 
 	@description = "LPS-139005 - Verify that the Object is no longer displayed on the Form's storage type when inactivated"
@@ -1871,15 +2003,6 @@ definition {
 	test ObjectDisapperasFormStorageSettingsWhenInactivated {
 
 		// TODO LPS-140863 ObjectDisapperasFormStorageSettingsWhenInactivated pending implementation
-
-	}
-
-	@description = "LPS-139005 - Verify that the Object is no longer displayed on the Workflow Site Menu page when inactivated"
-	@ignore = "Test Stub"
-	@priority = "4"
-	test ObjectDisapperasWorkflowSiteMenuWhenInactivated {
-
-		// TODO LPS-140859 ObjectDisapperasWorkflowSiteMenuWhenInactivated pending implementation
 
 	}
 
@@ -1980,12 +2103,35 @@ definition {
 	}
 
 	@description = "LPS-139005 - Verify that the Object portlet is no longer displayed on the Site Menu when inactivated"
-	@ignore = "Test Stub"
 	@priority = "4"
-	test ObjectPorletDisapperasSiteMenuWhenInactivated {
+	test ObjectPorletDisappearsSiteMenuWhenInactivated {
+		ObjectAdmin.addObjectViaAPI(
+			labelName = "Custom Object",
+			objectName = "CustomObject",
+			panelCategoryKey = "Site Administration > Content & Data",
+			pluralLabelName = "Custom Objects",
+			scope = "Site");
 
-		// TODO LPS-140857 ObjectPorletDisapperasSiteMenuWhenInactivated pending implementation
+		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject");
 
+		ObjectAdmin.openObjectAdmin();
+
+		ObjectPortlet.selectCustomObject(label = "Custom Object");
+
+		CreateObject.checkToggleInactive();
+
+		CreateObject.saveObject();
+
+		Navigator.openURL();
+
+		ProductMenuHelper.openProductMenu();
+
+		ProductMenuHelper.expandCategory(category = "Content & Data");
+
+		AssertElementNotPresent(
+			key_portlet = "Custom Object",
+			locator1 = "ProductMenu#PORTLET",
+			value1 = "Custom Object");
 	}
 
 	@description = "LPS-139005 - Verify that the Object portlet is displayed again on the Open Menu when reactivated"
@@ -2007,39 +2153,145 @@ definition {
 	}
 
 	@description = "LPS-139005 - Verify that the Object is displayed again on the Collection Providers when reactivated"
-	@ignore = "Test Stub"
 	@priority = "4"
 	test ObjectReappearsCollectionProvidersWhenReactivated {
+		ObjectAdmin.addObjectViaAPI(
+			labelName = "Custom Object",
+			objectName = "CustomObject",
+			pluralLabelName = "Custom Objects");
 
-		// TODO LPS-140880 ObjectReappearsCollectionProvidersWhenReactivated pending implementation
+		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject");
 
+		ObjectAdmin.openObjectAdmin();
+
+		ObjectPortlet.selectCustomObject(label = "Custom Object");
+
+		CreateObject.checkToggleInactive();
+
+		CreateObject.saveObject();
+
+		CreateObject.checkToggleActive();
+
+		CreateObject.saveObject();
+
+		VisualizeObjectCollectionDisplay.openObjectCollectionProvider();
+
+		AssertElementPresent(
+			key_labelName = "Custom Objects",
+			locator1 = "VisualizeObjectCollectionDisplay#VIEW_OBJECT_COLLECTION_DISPLAY");
 	}
 
 	@description = "LPS-139005 - Verify that the Object is displayed again on the Form's storage type when reactivated"
-	@ignore = "Test Stub"
 	@priority = "4"
 	test ObjectReappearsFormStorageTypeWhenReactivated {
+		ObjectAdmin.addObjectViaAPI(
+			labelName = "Custom Object",
+			objectName = "CustomObject",
+			pluralLabelName = "Custom Objects");
 
-		// TODO LPS-140883 ObjectReappearsFormStorageTypeWhenReactivated pending implementation
+		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject");
 
+		ObjectAdmin.openObjectAdmin();
+
+		ObjectPortlet.selectCustomObject(label = "Custom Object");
+
+		CreateObject.checkToggleInactive();
+
+		CreateObject.saveObject();
+
+		CreateObject.checkToggleActive();
+
+		CreateObject.saveObject();
+
+		PopulateObjectFormsConfiguration.openForm();
+
+		FormsAdminNavigator.gotoAddForm();
+
+		PopulateObjectFormsConfiguration.openFormSettings();
+
+		PopulateObjectFormsConfiguration.selectObject(label = "Object");
+
+		Click(locator1 = "PopulateObjectFormsConfiguration#DEFAULT_SELECT_OBJECT");
+
+		AssertElementPresent(
+			key_label = "Custom Object",
+			locator1 = "PopulateObjectFormsConfiguration#DISPLAY_SELECT_OBJECT");
 	}
 
 	@description = "LPS-139005 - Verify that the Object is displayed again on the Page Item Selector when reactivated"
-	@ignore = "Test Stub"
 	@priority = "4"
 	test ObjectReappearsPageItemSelectorWhenReactivated {
+		ObjectAdmin.addObjectViaAPI(
+			labelName = "Custom Object",
+			objectName = "CustomObject",
+			pluralLabelName = "Custom Objects");
 
-		// TODO LPS-140882 ObjectReappearsPageItemSelectorWhenReactivated pending implementation
+		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject");
 
+		ObjectAdmin.openObjectAdmin();
+
+		ObjectPortlet.selectCustomObject(label = "Custom Object");
+
+		CreateObject.checkToggleInactive();
+
+		CreateObject.saveObject();
+
+		CreateObject.checkToggleActive();
+
+		CreateObject.saveObject();
+
+		Navigator.openURL();
+
+		ContentPages.addPage(pageName = "Test Content Page Name");
+
+		PageEditor.addFragment(
+			collectionName = "Basic Components",
+			fragmentName = "Heading");
+
+		VisualizeObjectCollectionDisplay.openHeading();
+
+		Click.javaScriptClick(locator1 = "VisualizeObjectDisplayPage#SELECT_ITEM");
+
+		SelectFrame(
+			key_title = "Select",
+			locator1 = "IFrame#MODAL_ANY");
+
+		AssertElementPresent(
+			key_pluralLabelName = "Custom Objects",
+			locator1 = "VisualizeObjectDisplayPage#SELECT_OBJECT");
 	}
 
 	@description = "LPS-139005 - Verify that the Object is displayed again on the Page Template (subtype) when reactivated"
-	@ignore = "Test Stub"
 	@priority = "4"
 	test ObjectReappearsPageTemplateWhenReactivated {
+		ObjectAdmin.addObjectViaAPI(
+			labelName = "Custom Object",
+			objectName = "CustomObject",
+			pluralLabelName = "Custom Objects");
 
-		// TODO LPS-140881 ObjectReappearsPageTemplateWhenReactivated pending implementation
+		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject");
 
+		ObjectAdmin.openObjectAdmin();
+
+		ObjectPortlet.selectCustomObject(label = "Custom Object");
+
+		CreateObject.checkToggleInactive();
+
+		CreateObject.saveObject();
+
+		CreateObject.checkToggleActive();
+
+		CreateObject.saveObject();
+
+		VisualizeObjectDisplayPage.openPageTemplate();
+
+		Click(locator1 = "VisualizeObjectDisplayPage#SELECT_BLANK_OBJECT_DISPLAY_PAGE_TEMPLATE");
+
+		Click(locator1 = "VisualizeObjectDisplayPage#OBJECT_CONTENT_TYPE");
+
+		AssertElementPresent(
+			locator1 = "VisualizeObjectDisplayPage#OBJECT_CONTENT_TYPE",
+			value1 = "Custom Object");
 	}
 
 	@description = "LPS-139005 - Verify that the Object is displayed again on the Workflow Process Builder page when reactivated"

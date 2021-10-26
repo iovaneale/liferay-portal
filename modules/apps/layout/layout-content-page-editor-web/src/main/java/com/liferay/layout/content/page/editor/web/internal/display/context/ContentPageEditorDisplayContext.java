@@ -535,7 +535,9 @@ public class ContentPageEditorDisplayContext {
 				() -> {
 					Layout layout = themeDisplay.getLayout();
 
-					LayoutSet layoutSet = layout.getLayoutSet();
+					LayoutSet layoutSet =
+						LayoutSetLocalServiceUtil.fetchLayoutSet(
+							themeDisplay.getSiteGroupId(), false);
 
 					if (Validator.isNull(layout.getThemeId()) ||
 						Objects.equals(
@@ -1881,8 +1883,6 @@ public class ContentPageEditorDisplayContext {
 	}
 
 	private JSONObject _getMasterLayoutJSONObject() {
-		Layout layout = themeDisplay.getLayout();
-
 		return JSONUtil.put(
 			"masterLayoutData",
 			Optional.ofNullable(
@@ -1893,7 +1893,12 @@ public class ContentPageEditorDisplayContext {
 				null
 			)
 		).put(
-			"masterLayoutPlid", layout.getMasterLayoutPlid()
+			"masterLayoutPlid",
+			() -> {
+				Layout layout = themeDisplay.getLayout();
+
+				return String.valueOf(layout.getMasterLayoutPlid());
+			}
 		);
 	}
 

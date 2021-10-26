@@ -143,6 +143,10 @@ const DropArea = ({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [files]);
 
+	useEffect(() => {
+		filesRef.current = files;
+	}, [files]);
+
 	return (
 		<div
 			className={classNames('drop-area', {

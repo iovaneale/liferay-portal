@@ -28,7 +28,7 @@ definition {
 	@description = "This is a test for COMMERCE-6226. Price Entry lifecycle"
 	@priority = "3"
 	test AddEditAndDeletePriceEntry {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		// TODO Review
 
@@ -56,7 +56,7 @@ definition {
 		Type(
 			key_title = "Add SKUs",
 			locator1 = "CommerceEntry#ADD_RELATION_FIELD",
-			value1 = "MIN55861");
+			value1 = "'MIN55861'");
 
 		Pause(locator1 = "2000");
 
@@ -128,7 +128,7 @@ definition {
 	@description = "This is a test for COMMERCE-6225. Price Modifier lifecycle"
 	@priority = "3"
 	test AddEditAndDeletePriceModifier {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		// TODO Review
 
@@ -1095,7 +1095,7 @@ definition {
 	}
 
 	test AssertPriceEntriesAreProductsInTheSameCatalogAsPriceList {
-		property portal.acceptance = "true";
+		property portal.acceptance = "false";
 		property portal.upstream = "true";
 
 		CommerceNavigator.gotoPortlet(
@@ -1187,7 +1187,7 @@ definition {
 	}
 
 	test AssertPriceListCanBeAssociatedWithAccountAndAccountGroup {
-		property portal.acceptance = "true";
+		property portal.acceptance = "false";
 		property portal.upstream = "true";
 
 		for (var entryNumber : list "1,2") {
@@ -1255,7 +1255,7 @@ definition {
 	}
 
 	test AssertPriceListCannotBeMovedToADifferentCatalog {
-		property portal.acceptance = "true";
+		property portal.acceptance = "false";
 		property portal.upstream = "true";
 
 		CommerceNavigator.gotoPortlet(
@@ -1298,7 +1298,7 @@ definition {
 	}
 
 	test AssertPriceListHaveRequiredNameAndCurrency {
-		property portal.acceptance = "true";
+		property portal.acceptance = "false";
 		property portal.upstream = "true";
 
 		CommerceNavigator.gotoPortlet(
@@ -1363,7 +1363,7 @@ definition {
 	}
 
 	test AssertPriceListIsAppliedToAllAssociatedAccounts {
-		property portal.acceptance = "true";
+		property portal.acceptance = "false";
 		property portal.upstream = "true";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
@@ -1615,7 +1615,7 @@ definition {
 	}
 
 	test PriceListExistsOnlyInOneCatalog {
-		property portal.acceptance = "true";
+		property portal.acceptance = "false";
 		property portal.upstream = "true";
 
 		CommerceNavigator.gotoPortlet(

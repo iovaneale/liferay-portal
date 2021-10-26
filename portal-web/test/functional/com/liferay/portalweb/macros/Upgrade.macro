@@ -224,7 +224,6 @@ definition {
 			PageEditor.editFragmentText(
 				contributed = "false",
 				fragmentName = "Title",
-				id = "title",
 				text = "New editable fragment text");
 		}
 
@@ -971,15 +970,9 @@ definition {
 
 			ContentPages.gotoPageEditor();
 
-			AssertElementPresent(
-				key_elementType = "Container",
-				key_position = "1",
-				locator1 = "PageEditor#LAYOUT_ELEMENTS_HEADER");
-
-			AssertElementPresent(
-				key_elementType = "Grid",
-				key_position = "1",
-				locator1 = "PageEditor#LAYOUT_ELEMENTS_HEADER");
+			for (var fragmentName : list "Container,Grid") {
+				PageEditor.viewFragment(fragmentName = "${fragmentName}");
+			}
 		}
 
 		task ("Assert translation is working after migration") {
@@ -3541,20 +3534,19 @@ definition {
 				pageName = "Test Page Name",
 				siteName = "Test Site Name");
 
-			AssertTextEquals.assertPartialText(
-				key_fragmentName = "card",
-				locator1 = "Fragment#FRAGMENT_BASIC_COMPONENT",
-				value1 = "Test Title");
+			ContentPages.viewFragmentText(
+				contributed = "false",
+				fragmentName = "card",
+				text = "Test Title");
 		}
 
 		task ("View the inline text of the card fragment at edit mode after Upgrade") {
 			ContentPages.gotoPageEditor();
 
-			AssertTextEquals(
-				id = "02-title",
-				key_fragmentName = "Card",
-				locator1 = "Fragment#EDITABLE_FIELD",
-				value1 = "Test Title");
+			PageEditor.viewFragmentEditableText(
+				contributed = "false",
+				editableText = "Test Title",
+				fragmentName = "Card");
 		}
 
 		task ("Edit the inline text of the Card fragment") {
@@ -3568,11 +3560,10 @@ definition {
 		}
 
 		task ("View the updated inline text of the card fragment") {
-			AssertTextEquals(
-				id = "02-title",
-				key_fragmentName = "Card",
-				locator1 = "Fragment#EDITABLE_FIELD",
-				value1 = "Editable Title");
+			ContentPages.viewFragmentText(
+				contributed = "false",
+				fragmentName = "card",
+				text = "Editable Title");
 		}
 
 		task ("Publish the content page") {
@@ -3584,10 +3575,10 @@ definition {
 				pageName = "Test Page Name",
 				siteName = "Test Site Name");
 
-			AssertTextEquals.assertPartialText(
-				key_fragmentName = "card",
-				locator1 = "Fragment#FRAGMENT_BASIC_COMPONENT",
-				value1 = "Editable Title");
+			ContentPages.viewFragmentText(
+				contributed = "false",
+				fragmentName = "card",
+				text = "Editable Title");
 		}
 	}
 

@@ -400,10 +400,9 @@ definition {
 		}
 
 		task ("View the background image of Container") {
-			AssertVisible(
-				key_fragmentName = "Container",
-				key_imageName = "Document_1.jpg",
-				locator1 = "Fragment#FRAGMENT_CONTENT_BACKGROUND_IMAGE");
+			PageEditor.viewFragment(fragmentName = "Container");
+
+			ContentPages.viewFragmentBackgroundImage(image = "Document_1.jpg");
 		}
 
 		task ("View the styles of Heading") {
