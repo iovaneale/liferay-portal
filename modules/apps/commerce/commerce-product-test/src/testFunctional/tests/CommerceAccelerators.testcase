@@ -68,6 +68,10 @@ definition {
 		AssertElementNotPresent(locator1 = "CommerceAccelerators#GENERAL_QUANTITY_SELECTOR_INPUT_FIELD_ENABLED");
 	}
 
+	test EsercizioLuca{
+		// Questo è un test di esercizio
+	}
+
 	@description = "This is a functional test for COMMERCE-8145 - Without an account, add to cart and quantity selector are disabled for non-admin user"
 	@priority = "4"
 	test AddToCartButtonAndQuantitySelectorAreDisabledForNewUser {
