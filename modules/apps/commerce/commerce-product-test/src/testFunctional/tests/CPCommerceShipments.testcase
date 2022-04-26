@@ -567,7 +567,7 @@ definition {
 	@description = "This is a test for COMMERCE-6237. Create a shipment from an order"
 	@priority = "3"
 	test CreateOrderShipment {
-		property portal.acceptance = "false";
+		property portal.acceptance = "TEST";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
@@ -639,6 +639,8 @@ definition {
 		Button.clickSubmitButton();
 
 		CommerceNavigator.gotoEntry(entryName = "MIN55861");
+
+		WaitForElementPresent(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
 
 		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
 
