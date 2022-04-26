@@ -1329,7 +1329,12 @@ jdbc.counter.connectionProperties=oracle.jdbc.ReadTimeout=0;oracle.net.CONNECT_T
 					if (job.isSegmentEnabled()) {
 						SegmentTestClassGroup segmentTestClassGroup = batchTestClassGroup.getSegmentTestClassGroup(getSegmentID());
 
-						project.setProperty("test.case.properties.content", segmentTestClassGroup.getTestCasePropertiesContent());
+						if (segmentTestClassGroup != null) {
+							project.setProperty("test.case.properties.content", segmentTestClassGroup.getTestCasePropertiesContent());
+						}
+						else {
+							project.setProperty("test.case.properties.content", batchTestClassGroup.getTestCasePropertiesContent());
+						}
 					}
 					else {
 						project.setProperty("test.case.properties.content", batchTestClassGroup.getTestCasePropertiesContent());
@@ -11430,10 +11435,6 @@ log.sanitizer.enabled=false</echo>
 		</if>
 
 		<antcall inheritAll="false" target="compile-test" />
-
-		<record-test-class-file-names />
-
-		<antcall inheritAll="false" target="record-test-plugin-names" />
 
 		<echo if:set="env.JENKINS_HOME">
 ANT_OPTS=${env.ANT_OPTS}</echo>
