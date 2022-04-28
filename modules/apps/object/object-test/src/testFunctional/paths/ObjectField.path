@@ -18,6 +18,11 @@
 		<td></td>
 	</tr>
 	<tr>
+		<td>INPUT_MAXIMUM_FILE_SIZE</td>
+		<td>//label[contains(text(),'Maximum File Size')]/..//input</td>
+		<td></td>
+	</tr>
+	<tr>
 		<td>LABEL_ACCEPTED_FILE_EXTENSIONS</td>
 		<td>//div[@class = 'form-group']//label[contains(text(),'Accepted File Extensions')]</td>
 		<td></td>
@@ -43,6 +48,16 @@
 		<td></td>
 	</tr>
 	<tr>
+		<td>MAXIMUM_NUMBER_CHARACTERS_OPTION</td>
+		<td>//label[contains(text(),'Maximum Number of Characters')]/..//input</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>DEFAULT_TOGGLE_SWITCH</td>
+		<td>//span[@class='toggle-switch-label' and contains(text(), '${key_labelName}')]</td>
+		<td></td>
+	</tr>
+	<tr>
 		<td>MANDATORY_TOGGLE</td>
 		<td>//input[@name="required"]</td>
 		<td></td>
@@ -50,6 +65,11 @@
 	<tr>
 		<td>MANDATORY_TOGGLE_DISABLED</td>
 		<td>//input[@name="required" and @disabled]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>MODAL_CLOSE_BUTTON</td>
+		<td>//button[contains(@class, 'close')]</td>
 		<td></td>
 	</tr>
 	<tr>
