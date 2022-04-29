@@ -1165,6 +1165,14 @@ definition {
 			PageEditor.waitForAutoSave();
 		}
 
+		if ("${hideFromSiteSearchResults}" == "true") {
+			Check.checkNotVisible(
+				checkboxName = "Hide from Site Search Results",
+				locator1 = "Checkbox#ANY_CHECKBOX");
+
+			PageEditor.waitForAutoSave();
+		}
+
 		if (isSet(height)) {
 			Select(
 				key_fieldLabel = "Height",
@@ -1653,20 +1661,20 @@ definition {
 
 		if (isSet(listStyle)) {
 			AssertElementPresent(
-				key_fieldLabel = "List Style",
+				key_fieldLabel = "Style Display",
 				key_groupLabel = "Templates",
 				key_value = "${listStyle}",
 				locator1 = "Select#GROUPED_SELECT_VALUE");
 
 			Select(
-				key_fieldLabel = "List Style",
+				key_fieldLabel = "Style Display",
 				locator1 = "Select#GENERIC_SELECT_FIELD",
 				value1 = "${listStyle}");
 
 			PageEditor.waitForAutoSave();
 
 			AssertSelectedLabel(
-				key_fieldLabel = "List Style",
+				key_fieldLabel = "Style Display",
 				locator1 = "Select#GENERIC_SELECT_FIELD",
 				value1 = "${listStyle}");
 
@@ -2632,6 +2640,14 @@ definition {
 					key_fieldLabel = "HTML Tag",
 					locator1 = "Select#GENERIC_SELECT_FIELD",
 					value1 = "${htmlTag}");
+
+				PageEditor.waitForAutoSave();
+			}
+
+			if ("${hideFromSiteSearchResults}" == "true") {
+				Check.checkNotVisible(
+					checkboxName = "Hide from Site Search Results",
+					locator1 = "Checkbox#ANY_CHECKBOX");
 
 				PageEditor.waitForAutoSave();
 			}

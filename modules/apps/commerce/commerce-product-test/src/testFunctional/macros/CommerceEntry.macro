@@ -261,6 +261,8 @@ definition {
 
 		Check.checkToggleSwitch(locator1 = "CommerceEntry#ACTIVE_CHECKBOX");
 
+		AssertChecked(locator1 = "CommerceEntry#ACTIVE_CHECKBOX");
+
 		Button.clickPublish();
 	}
 

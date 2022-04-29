@@ -1,4 +1,4 @@
-#set (${versionPolicy} = '${replacestring;${range;[==,==]};.*,(.*)];$1}')
+#set ($versionPolicy = '${replacestring;${range;[==,==]};.*,(.*)];$1}')
 Bundle-Name: ${artifactId}-uad
 Bundle-SymbolicName: ${package}.uad
 Bundle-Version: ${version}
