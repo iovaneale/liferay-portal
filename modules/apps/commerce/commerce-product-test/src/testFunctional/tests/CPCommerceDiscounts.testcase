@@ -280,7 +280,7 @@ definition {
 	@description = "This is a test for COMMERCE-6230. Discount coupon code limitations"
 	@priority = "3"
 	test LimitCouponCodeUsability {
-		property portal.acceptance = "false";
+		property portal.acceptance = "TEST2";
 
 		// TODO Review
 
@@ -319,6 +319,8 @@ definition {
 		Click(
 			key_name = "Coupon Code",
 			locator1 = "ToggleSwitch#ENABLE_SPECIFIC_TOGGLE_SWITCH");
+
+		AssertChecked(locator1 = "ToggleSwitch#ENABLE_SPECIFIC_TOGGLE_SWITCH");
 
 		Type(
 			key_fieldLabel = "Coupon Code",
@@ -365,6 +367,8 @@ definition {
 		Click(
 			key_tab = "Apply",
 			locator1 = "Button#TAB_SUBMIT_BTN");
+
+		WaitForElementPresent(locator1 = "Luca#LUCA");
 
 		Type(
 			key_fieldName = "Name",
