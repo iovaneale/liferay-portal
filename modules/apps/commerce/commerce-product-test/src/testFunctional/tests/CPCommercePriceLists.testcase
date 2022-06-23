@@ -743,7 +743,7 @@ definition {
 	@description = "This is a test for COMMERCE-6235. Product Group Lifecycle"
 	@priority = "3"
 	test AddEditAndRemoveProductGroupFromPL {
-		property portal.acceptance = "false";
+		property portal.acceptance = "TEST";
 
 		// TODO Review
 
