@@ -1197,14 +1197,19 @@ definition {
 		}
 
 		task ("When the first price entry expires and the buyer views the U-Joint product") {
-			while (IsElementPresent(key_productName = "U-Joint", locator1 = "CommerceAccelerators#PRODUCT_CARD_PRICE", value1 = "20.00") && (maxIterations = "40")) {
+			var key_productName = "U-Joint";
 
-				// We need this pause for waiting for the Price List to expire
+			var actualValue = selenium.getText("//p[@title='${key_productName}']/..//span[@class='price-value']");
 
-				Pause(locator1 = "5000");
+			echo("THE ACTUAL VALUE IS ${actualValue}");
 
-				Refresh();
-			}
+			CommerceUtilities.waitAndRefresh(
+				actualValue = "${actualValue}",
+				expectedValue = "24.00");
+
+			var actualValue2 = selenium.getText("//p[@title='${key_productName}']/..//span[@class='price-value']");
+
+			echo("THE ACTUAL VALUE IS ${actualValue2}");
 		}
 
 		task ("Then the U-Joint price is the base price (24.00)") {

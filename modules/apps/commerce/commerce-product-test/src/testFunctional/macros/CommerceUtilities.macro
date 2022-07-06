@@ -6,4 +6,12 @@ definition {
 		WaitForElementNotPresent(locator1 = "Message#SUCCESS");
 	}
 
+	macro waitAndRefresh {
+		while ("${actualValue}" != "${expectedValue}") {
+			Pause(locator1 = "5000");
+
+			Refresh();
+		}
+	}
+
 }
