@@ -108,8 +108,6 @@ definition {
 				locator1 = "Checkbox#ANY_CHECKBOX");
 		}
 
-		WaitForPageLoad();
-
 		Click(locator1 = "Button#CONTINUE");
 
 		if (isSet(productUnitPrice) && isSet(productQuantity)) {
@@ -159,8 +157,6 @@ definition {
 						key_radioOption = "${shippingMethod}",
 						locator1 = "CommerceEntry#RADIO_BUTTON");
 
-					WaitForPageLoad();
-
 					Click(locator1 = "Button#CONTINUE");
 				}
 			}
@@ -191,8 +187,6 @@ definition {
 				newAddressZipCode = "${billingAddressZipCode}",
 				selectedAddressName = "${selectedBillingAddressName}");
 
-			WaitForPageLoad();
-
 			Click(locator1 = "Button#CONTINUE");
 		}
 
@@ -201,8 +195,6 @@ definition {
 				Click(
 					key_radioOption = "${deliveryTerm}",
 					locator1 = "CommerceEntry#RADIO_BUTTON");
-
-				WaitForPageLoad();
 
 				Click(locator1 = "Button#CONTINUE");
 			}
@@ -241,8 +233,6 @@ definition {
 					key_radioOption = "${paymentMethod}",
 					locator1 = "CommerceEntry#RADIO_BUTTON");
 
-				WaitForPageLoad();
-
 				Click(locator1 = "Button#CONTINUE");
 			}
 		}
@@ -252,8 +242,6 @@ definition {
 				Click(
 					key_radioOption = "${paymentTerm}",
 					locator1 = "CommerceEntry#RADIO_BUTTON");
-
-				WaitForPageLoad();
 
 				Click(locator1 = "Button#CONTINUE");
 			}
@@ -318,8 +306,6 @@ definition {
 			viewBillingAddressPermission = "${viewBillingAddressPermission}");
 
 		if (IsElementPresent(key_productName = "", locator1 = "CommerceAccelerators#CHECKOUT_SUMMARY_PRODUCT_TABLE_PRODUCT")) {
-			WaitForPageLoad();
-			
 			Click(locator1 = "Button#CONTINUE");
 		}
 	}
