@@ -227,6 +227,8 @@ definition {
 
 			LexiconEntry.gotoEntry(rowEntry = "Commerce Account");
 
+			WaitForPageLoad();
+
 			Account.gotoAssigneeTab(assigneeTab = "Users");
 		}
 
