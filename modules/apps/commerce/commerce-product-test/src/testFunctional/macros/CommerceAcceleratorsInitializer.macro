@@ -266,6 +266,8 @@ definition {
 	}
 
 	macro inviteNewMemberWithRoleToAccount {
+		WaitForPageLoad();
+		
 		Account.addNewUserToBusinessAccount(
 			accountName = "${accountName}",
 			userEmailAddress = "${emailAddress}",
