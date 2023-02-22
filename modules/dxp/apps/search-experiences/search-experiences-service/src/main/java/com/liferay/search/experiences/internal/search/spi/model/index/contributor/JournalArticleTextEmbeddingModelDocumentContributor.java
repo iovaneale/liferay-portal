@@ -18,15 +18,19 @@ import com.liferay.dynamic.data.mapping.model.Value;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.journal.model.JournalArticle;
+import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.search.Document;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.search.engine.SearchEngineInformation;
 import com.liferay.portal.search.spi.model.index.contributor.ModelDocumentContributor;
 import com.liferay.search.experiences.ml.embedding.text.TextEmbeddingRetriever;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -46,6 +50,23 @@ public class JournalArticleTextEmbeddingModelDocumentContributor
 
 	@Override
 	public void contribute(Document document, JournalArticle journalArticle) {
+		if (Objects.equals(
+				_searchEngineInformation.getVendorString(), "Solr")) {
+
+			return;
+		}
+
+		JournalArticle latestArticle =
+			_journalArticleLocalService.fetchLatestArticle(
+				journalArticle.getResourcePrimKey(),
+				WorkflowConstants.STATUS_APPROVED);
+
+		if ((latestArticle == null) ||
+			(latestArticle.getVersion() != journalArticle.getVersion())) {
+
+			return;
+		}
+
 		addLocalizedTextEmbeddings(
 			journalArticle, _textEmbeddingRetriever::getTextEmbedding,
 			journalArticle.getCompanyId(), document);
@@ -81,7 +102,13 @@ public class JournalArticleTextEmbeddingModelDocumentContributor
 	}
 
 	@Reference
+	private JournalArticleLocalService _journalArticleLocalService;
+
+	@Reference
 	private Language _language;
+
+	@Reference
+	private SearchEngineInformation _searchEngineInformation;
 
 	@Reference
 	private TextEmbeddingRetriever _textEmbeddingRetriever;

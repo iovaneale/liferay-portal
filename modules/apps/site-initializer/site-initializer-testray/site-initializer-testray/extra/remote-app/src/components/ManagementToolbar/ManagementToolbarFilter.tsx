@@ -15,21 +15,29 @@
 import ClayButton from '@clayui/button';
 import ClayDropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
-import {useContext, useState} from 'react';
+import {useCallback, useContext, useMemo, useState} from 'react';
 
 import {ListViewContext, ListViewTypes} from '../../context/ListViewContext';
 import useFormActions from '../../hooks/useFormActions';
 import i18n from '../../i18n';
+import {FilterSchema} from '../../schema/filter';
 import {SearchBuilder} from '../../util/search';
 import Form from '../Form';
 import {RendererFields} from '../Form/Renderer';
+import {FieldOptions} from '../Form/Renderer/Renderer';
 
 type ManagementToolbarFilterProps = {
-	filterFields?: RendererFields[];
+	filterSchema?: FilterSchema;
 };
 
-const getInitialFilters = (fields?: RendererFields[]) => {
-	if (fields) {
+const ManagementToolbarFilter: React.FC<ManagementToolbarFilterProps> = ({
+	filterSchema,
+}) => {
+	const fields = useMemo(() => filterSchema?.fields as RendererFields[], [
+		filterSchema?.fields,
+	]);
+
+	const initialFilters = useMemo(() => {
 		const initialValues: {[key: string]: string} = {};
 
 		for (const field of fields) {
@@ -37,18 +45,15 @@ const getInitialFilters = (fields?: RendererFields[]) => {
 		}
 
 		return initialValues;
-	}
+	}, [fields]);
 
-	return {};
-};
-
-const ManagementToolbarFilter: React.FC<ManagementToolbarFilterProps> = ({
-	filterFields,
-}) => {
-	const initialFilters = getInitialFilters(filterFields);
-	const [, dispatch] = useContext(ListViewContext);
+	const [listViewContext, dispatch] = useContext(ListViewContext);
+	const [fieldOptions, setFieldOptions] = useState<FieldOptions>({});
 	const [filter, setFilter] = useState('');
-	const [form, setForm] = useState(initialFilters);
+	const [form, setForm] = useState(() => ({
+		...initialFilters,
+		...listViewContext.filters.filter,
+	}));
 	const formActions = useFormActions();
 
 	const onChange = formActions.form.onChange({form, setForm});
@@ -62,20 +67,26 @@ const ManagementToolbarFilter: React.FC<ManagementToolbarFilterProps> = ({
 		});
 	};
 
-	const onApply = () => {
+	const onApply = useCallback(() => {
 		const filterCleaned = SearchBuilder.removeEmptyFilter(form);
 
-		const entries = Object.keys(filterCleaned).map((key) => ({
-			label: filterFields?.find(({name}) => name === key)?.label,
-			name: key,
-			value: filterCleaned[key],
-		}));
+		const entries = Object.keys(filterCleaned).map((key) => {
+			const field = fields?.find(({name}) => name === key);
+
+			const value = filterCleaned[key];
+
+			return {
+				label: field?.label,
+				name: key,
+				value,
+			};
+		});
 
 		dispatch({
 			payload: {filters: {entries, filter: filterCleaned}},
 			type: ListViewTypes.SET_UPDATE_FILTERS_AND_SORT,
 		});
-	};
+	}, [dispatch, fields, form]);
 
 	return (
 		<ClayDropDown
@@ -99,48 +110,47 @@ const ManagementToolbarFilter: React.FC<ManagementToolbarFilterProps> = ({
 				</ClayButton>
 			}
 		>
-			{!!filterFields?.length && (
-				<>
-					<div className="dropdown-header">
-						<p className="font-weight-bold my-2">
-							{i18n.translate('filter-results')}
-						</p>
+			<div className="dropdown-header">
+				<p className="font-weight-bold my-2">
+					{i18n.translate('filter-results')}
+				</p>
 
-						<Form.Input
-							name="search-filter"
-							onChange={({target: {value}}) => setFilter(value)}
-							placeholder="Search Filters"
-							value={filter}
-						/>
-					</div>
-					<Form.Divider />
+				<Form.Input
+					name="search-filter"
+					onChange={({target: {value}}) => setFilter(value)}
+					placeholder={i18n.translate('search-filters')}
+					value={filter}
+				/>
+			</div>
 
-					<div className="popover-body">
-						<Form.Renderer
-							fields={filterFields}
-							filter={filter}
-							form={form}
-							onChange={onChange}
-						/>
-					</div>
+			<Form.Divider />
 
-					<Form.Divider />
+			<div className="popover-body">
+				<Form.Renderer
+					fieldOptions={fieldOptions}
+					fields={fields}
+					filter={filter}
+					form={form}
+					onChange={onChange}
+					setFieldOptions={setFieldOptions}
+				/>
+			</div>
 
-					<div className="popover-footer">
-						<ClayButton onClick={onApply}>
-							{i18n.translate('apply')}
-						</ClayButton>
+			<Form.Divider />
 
-						<ClayButton
-							className="ml-3"
-							displayType="secondary"
-							onClick={onClear}
-						>
-							{i18n.translate('clear')}
-						</ClayButton>
-					</div>
-				</>
-			)}
+			<div className="popover-footer">
+				<ClayButton onClick={onApply}>
+					{i18n.translate('apply')}
+				</ClayButton>
+
+				<ClayButton
+					className="ml-3"
+					displayType="secondary"
+					onClick={onClear}
+				>
+					{i18n.translate('clear')}
+				</ClayButton>
+			</div>
 		</ClayDropDown>
 	);
 };

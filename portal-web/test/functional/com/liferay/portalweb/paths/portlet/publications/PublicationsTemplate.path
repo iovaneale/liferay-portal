@@ -12,7 +12,7 @@
 <tbody>
 <tr>
 	<td>INVITE_USERS_BUTTON</td>
-	<td>//button[contains(@class,'btn') and contains(.,'Invite Users')]</td>
+	<td>//button[contains(@class,'btn') and contains(.,'Add Users')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -53,6 +53,11 @@
 <tr>
 	<td>TEMPLATE_NAME_IN_PUBLICATION_TEMPLATE</td>
 	<td>//div[@class='publication-template-name' and contains(.,'${key_templateName}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>TEMPLATE_DROPDOWN_MENU</td>
+	<td>//tr[contains(.,'${key_templateName}')]//button[contains(@aria-controls,'dropdown-menu')]</td>
 	<td></td>
 </tr>
 </tbody>

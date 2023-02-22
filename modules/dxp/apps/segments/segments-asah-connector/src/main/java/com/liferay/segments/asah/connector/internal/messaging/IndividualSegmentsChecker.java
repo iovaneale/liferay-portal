@@ -28,17 +28,24 @@ import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.segments.asah.connector.internal.cache.AsahSegmentsEntryCache;
 import com.liferay.segments.asah.connector.internal.client.AsahFaroBackendClient;
 import com.liferay.segments.asah.connector.internal.client.AsahFaroBackendClientImpl;
-import com.liferay.segments.asah.connector.internal.client.JSONWebServiceClient;
 import com.liferay.segments.asah.connector.internal.client.model.Individual;
 import com.liferay.segments.asah.connector.internal.client.model.IndividualSegment;
 import com.liferay.segments.asah.connector.internal.client.model.Results;
 import com.liferay.segments.asah.connector.internal.client.util.OrderByField;
+import com.liferay.segments.asah.connector.internal.expression.IndividualSegmentsExpressionVisitorImpl;
+import com.liferay.segments.asah.connector.internal.expression.parser.IndividualSegmentsExpressionLexer;
+import com.liferay.segments.asah.connector.internal.expression.parser.IndividualSegmentsExpressionParser;
 import com.liferay.segments.constants.SegmentsEntryConstants;
+import com.liferay.segments.criteria.Criteria;
+import com.liferay.segments.criteria.CriteriaSerializer;
 import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.service.SegmentsEntryLocalService;
 import com.liferay.segments.service.SegmentsEntryRelLocalService;
@@ -50,6 +57,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CommonTokenStream;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -119,7 +129,7 @@ public class IndividualSegmentsChecker {
 	@Activate
 	protected void activate() {
 		_asahFaroBackendClient = new AsahFaroBackendClientImpl(
-			_analyticsSettingsManager, _jsonWebServiceClient);
+			_analyticsSettingsManager, _http);
 	}
 
 	@Deactivate
@@ -142,10 +152,32 @@ public class IndividualSegmentsChecker {
 				_portal.getSiteDefaultLocale(serviceContext.getScopeGroupId()),
 				individualSegment.getName());
 
+			Criteria criteria = null;
+
+			if (GetterUtil.getBoolean(
+					PropsUtil.get("feature.flag.LPS-171722"))) {
+
+				IndividualSegmentsExpressionParser
+					individualSegmentsExpressionParser =
+						new IndividualSegmentsExpressionParser(
+							new CommonTokenStream(
+								new IndividualSegmentsExpressionLexer(
+									new ANTLRInputStream(
+										individualSegment.getFilter()))));
+
+				IndividualSegmentsExpressionParser.ExpressionContext
+					expressionContext =
+						individualSegmentsExpressionParser.expression();
+
+				criteria = expressionContext.accept(
+					new IndividualSegmentsExpressionVisitorImpl());
+			}
+
 			if (segmentsEntry == null) {
 				_segmentsEntryLocalService.addSegmentsEntry(
 					individualSegment.getId(), nameMap, Collections.emptyMap(),
-					true, null, SegmentsEntryConstants.SOURCE_ASAH_FARO_BACKEND,
+					true, _serialize(criteria),
+					SegmentsEntryConstants.SOURCE_ASAH_FARO_BACKEND,
 					User.class.getName(), serviceContext);
 
 				return;
@@ -153,7 +185,7 @@ public class IndividualSegmentsChecker {
 
 			_segmentsEntryLocalService.updateSegmentsEntry(
 				segmentsEntry.getSegmentsEntryId(), individualSegment.getId(),
-				nameMap, null, true, null, serviceContext);
+				nameMap, null, true, _serialize(criteria), serviceContext);
 		}
 		catch (PortalException portalException) {
 			_log.error(
@@ -360,6 +392,14 @@ public class IndividualSegmentsChecker {
 		return null;
 	}
 
+	private String _serialize(Criteria criteria) {
+		if (criteria == null) {
+			return null;
+		}
+
+		return CriteriaSerializer.serialize(criteria);
+	}
+
 	private static final int _DELTA = 100;
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -377,7 +417,7 @@ public class IndividualSegmentsChecker {
 	private CompanyLocalService _companyLocalService;
 
 	@Reference
-	private JSONWebServiceClient _jsonWebServiceClient;
+	private Http _http;
 
 	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED)
 	private ModuleServiceLifecycle _moduleServiceLifecycle;

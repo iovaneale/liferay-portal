@@ -39,11 +39,13 @@ type Column<T = any> = {
 	sorteable?: boolean;
 	truncate?: boolean;
 	value: string;
+	width?: '50' | '75' | '100' | '200' | '250' | '300' | '350' | '400';
 };
 
 export type TableProps<T = any> = {
 	actions?: Action[];
 	allRowsChecked?: boolean;
+	bodyVerticalAlignment?: 'bottom' | 'middle' | 'top';
 	columns: Column<T>[];
 	highlight?: (item: T) => boolean;
 	items: T[];
@@ -77,6 +79,7 @@ const Table: React.FC<TableProps> = ({
 	rowWrap = false,
 	selectedRows = [],
 	sort,
+	bodyVerticalAlignment = 'middle',
 }) => {
 	const [firstRowAction] = items;
 
@@ -124,6 +127,7 @@ const Table: React.FC<TableProps> = ({
 				className="testray-table"
 				hover
 				responsive={responsive}
+				tableVerticalAlignment={bodyVerticalAlignment}
 			>
 				<ClayTable.Head>
 					<ClayTable.Row>
@@ -195,6 +199,7 @@ const Table: React.FC<TableProps> = ({
 								<ClayTable.Cell
 									className={classNames('text-dark', {
 										'cursor-pointer': column.clickable,
+										[`table-cell-minw-${column.width}`]: column.width,
 										'table-cell-expand':
 											column.size === 'sm',
 										'table-cell-expand-small':

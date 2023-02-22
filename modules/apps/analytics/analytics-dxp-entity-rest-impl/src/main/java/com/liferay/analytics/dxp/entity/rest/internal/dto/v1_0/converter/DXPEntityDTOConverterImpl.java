@@ -14,6 +14,7 @@
 
 package com.liferay.analytics.dxp.entity.rest.internal.dto.v1_0.converter;
 
+import com.liferay.account.model.AccountEntry;
 import com.liferay.analytics.dxp.entity.rest.dto.v1_0.DXPEntity;
 import com.liferay.analytics.dxp.entity.rest.dto.v1_0.ExpandoField;
 import com.liferay.analytics.dxp.entity.rest.dto.v1_0.Field;
@@ -27,6 +28,7 @@ import com.liferay.expando.kernel.model.ExpandoTable;
 import com.liferay.expando.kernel.model.ExpandoTableConstants;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
@@ -104,10 +106,13 @@ public class DXPEntityDTOConverterImpl implements DXPEntityDTOConverter {
 					if (entry.getValue() instanceof Date) {
 						Date date = (Date)entry.getValue();
 
-						value = GetterUtil.getString(date.getTime());
+						value = String.valueOf(date.getTime());
+					}
+					else if (Validator.isNotNull(entry.getValue())) {
+						value = String.valueOf(entry.getValue());
 					}
 					else {
-						value = GetterUtil.getString(entry.getValue());
+						value = StringPool.BLANK;
 					}
 				}
 			};
@@ -296,6 +301,19 @@ public class DXPEntityDTOConverterImpl implements DXPEntityDTOConverter {
 		List<String> includeAttributeNames = new ArrayList<>();
 
 		if (StringUtil.equals(
+				baseModel.getModelClassName(), AccountEntry.class.getName())) {
+
+			AccountEntry accountEntry = (AccountEntry)baseModel;
+
+			AnalyticsConfiguration analyticsConfiguration =
+				_analyticsConfigurationRegistry.getAnalyticsConfiguration(
+					accountEntry.getCompanyId());
+
+			includeAttributeNames = ListUtil.fromArray(
+				analyticsConfiguration.syncedAccountFieldNames());
+		}
+
+		if (StringUtil.equals(
 				baseModel.getModelClassName(), User.class.getName())) {
 
 			User user = (User)baseModel;
@@ -318,20 +336,6 @@ public class DXPEntityDTOConverterImpl implements DXPEntityDTOConverter {
 		_addFieldAttributes(baseModel, fields, includeAttributeNames);
 
 		if (StringUtil.equals(
-				baseModel.getModelClassName(), Organization.class.getName())) {
-
-			Field field = new Field();
-
-			field.setName("parentOrganizationName");
-
-			Organization organization = (Organization)baseModel;
-
-			field.setValue(organization.getParentOrganizationName());
-
-			fields.add(field);
-		}
-
-		if (StringUtil.equals(
 				baseModel.getModelClassName(), Group.class.getName())) {
 
 			for (Field field : fields) {
@@ -343,6 +347,20 @@ public class DXPEntityDTOConverterImpl implements DXPEntityDTOConverter {
 					break;
 				}
 			}
+		}
+
+		if (StringUtil.equals(
+				baseModel.getModelClassName(), Organization.class.getName())) {
+
+			Field field = new Field();
+
+			field.setName("parentOrganizationName");
+
+			Organization organization = (Organization)baseModel;
+
+			field.setValue(organization.getParentOrganizationName());
+
+			fields.add(field);
 		}
 
 		return fields.toArray(new Field[0]);

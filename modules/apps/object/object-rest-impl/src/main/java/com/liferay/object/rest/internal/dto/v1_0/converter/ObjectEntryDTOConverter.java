@@ -18,7 +18,6 @@ import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.util.DLURLHelper;
-import com.liferay.dynamic.data.mapping.expression.DDMExpressionFactory;
 import com.liferay.list.type.model.ListTypeEntry;
 import com.liferay.list.type.service.ListTypeEntryLocalService;
 import com.liferay.object.constants.ObjectFieldConstants;
@@ -26,25 +25,22 @@ import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.entry.util.ObjectEntryValuesUtil;
 import com.liferay.object.field.setting.util.ObjectFieldSettingUtil;
-import com.liferay.object.field.util.ObjectFieldFormulaEvaluatorUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.rest.dto.v1_0.FileEntry;
-import com.liferay.object.rest.dto.v1_0.Link;
 import com.liferay.object.rest.dto.v1_0.ListEntry;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
 import com.liferay.object.rest.dto.v1_0.Status;
 import com.liferay.object.rest.dto.v1_0.util.CreatorUtil;
+import com.liferay.object.rest.dto.v1_0.util.LinkUtil;
 import com.liferay.object.scope.ObjectScopeProvider;
 import com.liferay.object.scope.ObjectScopeProviderRegistry;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
-import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.petra.function.transform.TransformUtil;
-import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -52,11 +48,9 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -427,50 +421,27 @@ public class ObjectEntryDTOConverter
 					continue;
 				}
 
-				DLFileEntry dlFileEntry = _dLFileEntryLocalService.getFileEntry(
-					fileEntryId);
+				DLFileEntry dlFileEntry =
+					_dLFileEntryLocalService.fetchDLFileEntry(fileEntryId);
 
-				Link fileEntryLink = new Link() {
-					{
-						href = StringBundler.concat(
-							_portal.getPathContext(), _portal.getPathMain(),
-							"/portal/login");
-						label = dlFileEntry.getFileName();
-					}
-				};
-
-				try {
-					com.liferay.portal.kernel.repository.model.FileEntry
-						fileEntry = _dlAppService.getFileEntry(fileEntryId);
-
-					String href = _dlURLHelper.getDownloadURL(
-						fileEntry, fileEntry.getFileVersion(), null,
-						StringPool.BLANK);
-
-					href = HttpComponentsUtil.addParameter(
-						href, "objectDefinitionExternalReferenceCode",
-						objectDefinition.getExternalReferenceCode());
-					href = HttpComponentsUtil.addParameter(
-						href, "objectEntryExternalReferenceCode",
-						objectEntry.getExternalReferenceCode());
-
-					fileEntryLink.setHref(href);
+				if (dlFileEntry != null) {
+					map.put(
+						objectFieldName,
+						new FileEntry() {
+							{
+								id = dlFileEntry.getFileEntryId();
+								link = LinkUtil.toLink(
+									_dlAppService, dlFileEntry, _dlURLHelper,
+									objectDefinition.getExternalReferenceCode(),
+									objectEntry.getExternalReferenceCode(),
+									_portal);
+								name = dlFileEntry.getFileName();
+							}
+						});
 				}
-				catch (PrincipalException principalException) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(principalException);
-					}
+				else {
+					map.put(objectFieldName, new FileEntry());
 				}
-
-				map.put(
-					objectFieldName,
-					new FileEntry() {
-						{
-							id = dlFileEntry.getFileEntryId();
-							link = fileEntryLink;
-							name = dlFileEntry.getFileName();
-						}
-					});
 			}
 			else if (Objects.equals(
 						objectField.getBusinessType(),
@@ -515,34 +486,13 @@ public class ObjectEntryDTOConverter
 											getObjectDefinitionId1());
 
 							if (relatedObjectDefinition.isSystem()) {
-								Map<String, Serializable> variables =
-									new HashMap<>();
-
-								Map<String, Object> systemModelAttributes =
-									_objectEntryLocalService.
-										getSystemModelAttributes(
-											relatedObjectDefinition,
-											objectEntryId);
-
-								for (Map.Entry<String, Object> entry :
-										systemModelAttributes.entrySet()) {
-
-									variables.put(
-										entry.getKey(),
-										(Serializable)entry.getValue());
-								}
-
 								_addNestedFields(
 									map, nestedFields, objectFieldName,
 									objectRelationship,
-									ObjectFieldFormulaEvaluatorUtil.evaluate(
-										_ddmExpressionFactory,
-										_objectFieldLocalService.
-											getObjectFields(
-												relatedObjectDefinition.
-													getObjectDefinitionId()),
-										_objectFieldSettingLocalService,
-										_userLocalService, variables));
+									_objectEntryLocalService.
+										getSystemModelAttributes(
+											relatedObjectDefinition,
+											objectEntryId));
 							}
 							else {
 								_addNestedFields(
@@ -644,9 +594,6 @@ public class ObjectEntryDTOConverter
 		ObjectEntryDTOConverter.class);
 
 	@Reference
-	private DDMExpressionFactory _ddmExpressionFactory;
-
-	@Reference
 	private DLAppService _dlAppService;
 
 	@Reference
@@ -672,9 +619,6 @@ public class ObjectEntryDTOConverter
 
 	@Reference
 	private ObjectFieldLocalService _objectFieldLocalService;
-
-	@Reference
-	private ObjectFieldSettingLocalService _objectFieldSettingLocalService;
 
 	@Reference
 	private ObjectRelationshipLocalService _objectRelationshipLocalService;

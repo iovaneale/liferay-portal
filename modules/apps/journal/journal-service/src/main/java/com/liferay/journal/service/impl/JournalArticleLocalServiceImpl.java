@@ -87,7 +87,6 @@ import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.model.impl.JournalArticleDisplayImpl;
 import com.liferay.journal.model.impl.JournalArticleImpl;
 import com.liferay.journal.service.JournalArticleResourceLocalService;
-import com.liferay.journal.service.JournalContentSearchLocalService;
 import com.liferay.journal.service.base.JournalArticleLocalServiceBaseImpl;
 import com.liferay.journal.service.persistence.JournalArticleLocalizationPersistence;
 import com.liferay.journal.service.persistence.JournalArticleResourcePersistence;
@@ -766,6 +765,12 @@ public class JournalArticleLocalServiceImpl
 			displayDateMonth, displayDateDay, displayDateYear, displayDateHour,
 			displayDateMinute, user.getTimeZone(), null);
 
+		if ((displayDateMonth == displayDateDay) &&
+			(displayDateDay == displayDateYear) && (displayDateYear == 0)) {
+
+			displayDate = null;
+		}
+
 		Date expirationDate = null;
 		Date reviewDate = null;
 
@@ -1355,11 +1360,6 @@ public class JournalArticleLocalServiceImpl
 
 			_commentManager.deleteDiscussion(
 				JournalArticle.class.getName(), article.getResourcePrimKey());
-
-			// Content searches
-
-			_journalContentSearchLocalService.deleteArticleContentSearches(
-				article.getGroupId(), article.getArticleId());
 
 			// Friendly URL
 
@@ -6314,6 +6314,13 @@ public class JournalArticleLocalServiceImpl
 
 		JournalArticle article = getArticle(groupId, articleId);
 
+		if ((article.getClassNameId() > 0) &&
+			(displayDateMonth == displayDateDay) &&
+			(displayDateDay == displayDateYear) && (displayDateYear == 0)) {
+
+			displayDate = null;
+		}
+
 		serviceContext.validateModifiedDate(
 			article, ArticleVersionException.class);
 
@@ -7241,8 +7248,8 @@ public class JournalArticleLocalServiceImpl
 				serviceContext.setScopeGroupId(article.getGroupId());
 
 				journalArticleLocalService.updateStatus(
-					userId, article, WorkflowConstants.STATUS_APPROVED, null,
-					serviceContext, new HashMap<>());
+					userId, article.getId(), WorkflowConstants.STATUS_APPROVED,
+					new HashMap<>(), serviceContext);
 			});
 		actionableDynamicQuery.setTransactionConfig(
 			DefaultActionableDynamicQuery.REQUIRES_NEW_TRANSACTION_CONFIG);
@@ -9231,9 +9238,6 @@ public class JournalArticleLocalServiceImpl
 	@Reference
 	private JournalContentCompatibilityConverter
 		_journalContentCompatibilityConverter;
-
-	@Reference
-	private JournalContentSearchLocalService _journalContentSearchLocalService;
 
 	@Reference
 	private JournalConverter _journalConverter;

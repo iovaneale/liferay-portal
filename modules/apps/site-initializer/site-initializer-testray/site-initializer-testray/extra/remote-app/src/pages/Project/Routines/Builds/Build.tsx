@@ -24,14 +24,13 @@ import StatusBadge from '../../../../components/StatusBadge';
 import {StatusBadgeType} from '../../../../components/StatusBadge/StatusBadge';
 import useMutate from '../../../../hooks/useMutate';
 import useRuns from '../../../../hooks/useRuns';
+import useSearchBuilder from '../../../../hooks/useSearchBuilder';
 import i18n from '../../../../i18n';
-import {filters} from '../../../../schema/filter';
 import {
 	PickList,
 	TestrayCaseResult,
 	testrayCaseResultImpl,
 } from '../../../../services/rest';
-import {SearchBuilder} from '../../../../util/search';
 import useBuildTestActions from './useBuildTestActions';
 
 const Build = () => {
@@ -47,7 +46,7 @@ const Build = () => {
 		return () => setRunId(null);
 	}, [setRunId]);
 
-	const caseResultFilter = new SearchBuilder();
+	const caseResultFilter = useSearchBuilder({useURIEncode: false});
 
 	const filter = runId
 		? caseResultFilter
@@ -60,8 +59,11 @@ const Build = () => {
 	return (
 		<Container className="mt-4">
 			<ListViewRest
+				initialContext={{
+					columns: {environment: false},
+				}}
 				managementToolbarProps={{
-					filterFields: filters.build.results as any,
+					filterSchema: 'buildResults',
 					title: i18n.translate('tests'),
 				}}
 				resource={testrayCaseResultImpl.resource}
@@ -70,12 +72,28 @@ const Build = () => {
 					columns: [
 						{
 							clickable: true,
+							key: 'caseType',
+							render: (
+								_,
+								{case: testrayCase}: TestrayCaseResult
+							) => testrayCase?.caseType?.name,
+							value: i18n.translate('case-type'),
+						},
+						{
+							clickable: true,
 							key: 'priority',
 							render: (
 								_,
 								{case: testrayCase}: TestrayCaseResult
 							) => testrayCase?.priority,
 							value: i18n.translate('priority'),
+						},
+						{
+							clickable: true,
+							key: 'team',
+							render: (_, testrayCaseResult: TestrayCaseResult) =>
+								testrayCaseResult.case?.component?.team?.name,
+							value: i18n.translate('team'),
 						},
 						{
 							key: 'component',
@@ -102,6 +120,14 @@ const Build = () => {
 									?.toString()
 									.padStart(2, '0'),
 							value: i18n.translate('run'),
+						},
+						{
+							clickable: true,
+							key: 'environment',
+							render: (_, item: TestrayCaseResult) =>
+								item?.run?.name,
+							value: i18n.translate('environment'),
+							width: '250',
 						},
 						{
 							key: 'user',

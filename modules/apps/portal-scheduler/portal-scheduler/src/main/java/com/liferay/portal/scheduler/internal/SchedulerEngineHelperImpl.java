@@ -293,10 +293,12 @@ public class SchedulerEngineHelperImpl implements SchedulerEngineHelper {
 	}
 
 	@Override
-	public void run(String jobName, String groupName, StorageType storageType)
+	public void run(
+			long companyId, String jobName, String groupName,
+			StorageType storageType)
 		throws SchedulerException {
 
-		_schedulerEngine.run(jobName, groupName, storageType);
+		_schedulerEngine.run(companyId, jobName, groupName, storageType);
 	}
 
 	@Override
@@ -344,13 +346,6 @@ public class SchedulerEngineHelperImpl implements SchedulerEngineHelper {
 		throws SchedulerException {
 
 		_schedulerEngine.unschedule(jobName, groupName, storageType);
-	}
-
-	@Override
-	public void update(Trigger trigger, StorageType storageType)
-		throws SchedulerException {
-
-		_schedulerEngine.update(trigger, storageType);
 	}
 
 	@Activate

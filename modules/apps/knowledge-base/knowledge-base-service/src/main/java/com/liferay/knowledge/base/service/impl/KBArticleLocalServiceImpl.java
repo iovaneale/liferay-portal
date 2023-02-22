@@ -517,6 +517,8 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 
 		kbArticleLocalService.updateKBArticle(kbArticle);
 
+		serviceContext.setCommand(Constants.EXPIRE);
+
 		return updateStatus(
 			userId, resourcePrimKey, WorkflowConstants.STATUS_EXPIRED,
 			serviceContext);
@@ -1380,8 +1382,14 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 
 		kbArticle = kbArticlePersistence.update(kbArticle);
 
-		if ((status != WorkflowConstants.STATUS_APPROVED) &&
-			(status != WorkflowConstants.STATUS_EXPIRED)) {
+		if (status != WorkflowConstants.STATUS_APPROVED) {
+			if (status == WorkflowConstants.STATUS_EXPIRED) {
+				_notify(
+					SetUtil.fromArray(
+						_NOTIFICATION_RECEIVER_OWNER,
+						_NOTIFICATION_RECEIVER_SUBSCRIBER),
+					userId, kbArticle, Constants.EXPIRE, serviceContext);
+			}
 
 			return kbArticle;
 		}
@@ -1605,9 +1613,8 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 					expirationDate);
 		}
 
-		_companyLocalService.forEachCompanyId(
-			companyId -> _expireKBArticlesByCompanyId(
-				companyId, expirationDate, new ServiceContext()));
+		_companyLocalService.forEachCompany(
+			company -> _expireKBArticlesByCompany(company, expirationDate));
 	}
 
 	private void _checkKBArticlesByReviewDate(Date reviewDate)
@@ -1655,14 +1662,15 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 		}
 	}
 
-	private void _expireKBArticlesByCompanyId(
-			long companyId, Date expirationDate, ServiceContext serviceContext)
+	private void _expireKBArticlesByCompany(
+			Company company, Date expirationDate)
 		throws PortalException {
 
-		long userId = _userLocalService.getDefaultUserId(companyId);
+		long userId = _userLocalService.getDefaultUserId(
+			company.getCompanyId());
 
 		List<KBArticle> kbArticles = _getKBArticlesByCompanyIdAndExpirationDate(
-			companyId, expirationDate);
+			company.getCompanyId(), expirationDate);
 
 		for (KBArticle kbArticle : kbArticles) {
 			if (_log.isDebugEnabled()) {
@@ -1675,7 +1683,8 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 
 			updateStatus(
 				userId, kbArticle.getResourcePrimKey(),
-				WorkflowConstants.STATUS_EXPIRED, serviceContext);
+				WorkflowConstants.STATUS_EXPIRED,
+				_getServiceContext(company, kbArticle));
 		}
 	}
 
@@ -1741,6 +1750,10 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 			return kbGroupServiceConfiguration.emailKBArticleAddedBody();
 		}
 
+		if (Objects.equals(action, Constants.EXPIRE)) {
+			return kbGroupServiceConfiguration.emailKBArticleExpiredBody();
+		}
+
 		if (Objects.equals(action, _NOTIFICATION_ACTION_REVIEW)) {
 			return kbGroupServiceConfiguration.emailKBArticleReviewBody();
 		}
@@ -1789,6 +1802,8 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 				).and(
 					KBArticleTable.INSTANCE.expirationDate.lte(expirationDate)
 				).and(
+					KBArticleTable.INSTANCE.latest.eq(Boolean.TRUE)
+				).and(
 					KBArticleTable.INSTANCE.status.neq(
 						WorkflowConstants.STATUS_EXPIRED)
 				)
@@ -1806,6 +1821,8 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 			).where(
 				KBArticleTable.INSTANCE.companyId.eq(
 					companyId
+				).and(
+					KBArticleTable.INSTANCE.latest.eq(Boolean.TRUE)
 				).and(
 					KBArticleTable.INSTANCE.reviewDate.gt(reviewDateGT)
 				).and(
@@ -1856,6 +1873,10 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 	private int _getNotificationType(String action) {
 		if (Objects.equals(action, Constants.ADD)) {
 			return UserNotificationDefinition.NOTIFICATION_TYPE_ADD_ENTRY;
+		}
+
+		if (Objects.equals(action, Constants.EXPIRE)) {
+			return UserNotificationDefinition.NOTIFICATION_TYPE_EXPIRED_ENTRY;
 		}
 
 		if (Objects.equals(action, _NOTIFICATION_ACTION_REVIEW)) {
@@ -1912,12 +1933,31 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 		return resourcePrimKey;
 	}
 
+	private ServiceContext _getServiceContext(
+			Company company, KBArticle kbArticle)
+		throws PortalException {
+
+		ServiceContext serviceContext = new ServiceContext();
+
+		serviceContext.setPlid(LayoutConstants.DEFAULT_PLID);
+		serviceContext.setPortalURL(
+			company.getPortalURL(kbArticle.getGroupId()));
+		serviceContext.setPortletId(KBPortletKeys.KNOWLEDGE_BASE_ADMIN);
+		serviceContext.setScopeGroupId(kbArticle.getGroupId());
+
+		return serviceContext;
+	}
+
 	private String _getSubject(
 		String action,
 		KBGroupServiceConfiguration kbGroupServiceConfiguration) {
 
 		if (Objects.equals(action, Constants.ADD)) {
 			return kbGroupServiceConfiguration.emailKBArticleAddedSubject();
+		}
+
+		if (Objects.equals(action, Constants.EXPIRE)) {
+			return kbGroupServiceConfiguration.emailKBArticleExpiredSubject();
 		}
 
 		if (Objects.equals(action, _NOTIFICATION_ACTION_REVIEW)) {
@@ -2027,6 +2067,12 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 			return;
 		}
 
+		if (Objects.equals(action, Constants.EXPIRE) &&
+			!kbGroupServiceConfiguration.emailKBArticleExpiredEnabled()) {
+
+			return;
+		}
+
 		if (Objects.equals(action, Constants.UPDATE) &&
 			!kbGroupServiceConfiguration.emailKBArticleUpdatedEnabled()) {
 
@@ -2120,7 +2166,6 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 
 			subscriptionSender.addRuntimeSubscribers(
 				user.getEmailAddress(), user.getFullName());
-			subscriptionSender.setSendToCurrentUser(true);
 		}
 
 		subscriptionSender.flushNotificationsAsync();
@@ -2145,19 +2190,12 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 						kbArticle.getReviewDate()));
 			}
 
-			ServiceContext serviceContext = new ServiceContext();
-
-			serviceContext.setPlid(LayoutConstants.DEFAULT_PLID);
-			serviceContext.setPortalURL(
-				company.getPortalURL(kbArticle.getGroupId()));
-			serviceContext.setPortletId(KBPortletKeys.KNOWLEDGE_BASE_ADMIN);
-			serviceContext.setScopeGroupId(kbArticle.getGroupId());
-
 			_notify(
 				SetUtil.fromArray(
 					_NOTIFICATION_RECEIVER_OWNER,
 					_NOTIFICATION_RECEIVER_SUBSCRIBER),
-				userId, kbArticle, _NOTIFICATION_ACTION_REVIEW, serviceContext);
+				userId, kbArticle, _NOTIFICATION_ACTION_REVIEW,
+				_getServiceContext(company, kbArticle));
 		}
 	}
 

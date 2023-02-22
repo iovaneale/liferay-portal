@@ -62,7 +62,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -70,7 +69,6 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	configurationPid = "com.liferay.segments.experiment.web.internal.configuration.SegmentsExperimentConfiguration",
-	configurationPolicy = ConfigurationPolicy.OPTIONAL,
 	property = {
 		"javax.portlet.name=" + SegmentsPortletKeys.SEGMENTS_EXPERIMENT,
 		"mvc.command.name=/segments_experiment/get_data"
@@ -171,31 +169,24 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 					httpServletRequest)
 			).put(
 				"createSegmentsVariantURL",
-				() -> {
-					String url = PortletURLBuilder.create(
-						_portal.getControlPanelPortletURL(
-							httpServletRequest, group,
-							ContentPageEditorPortletKeys.
-								CONTENT_PAGE_EDITOR_PORTLET,
-							0, 0, PortletRequest.ACTION_PHASE)
-					).setActionName(
-						"/layout_content_page_editor/add_segments_experience"
-					).buildString();
-
-					url = HttpComponentsUtil.addParameter(
-						url,
-						_getContentPageEditorPortletNamespace() + "p_l_mode",
-						Constants.EDIT);
-					url = HttpComponentsUtil.addParameter(
-						url, _getContentPageEditorPortletNamespace() + "plid",
-						layout.getPlid());
-					url = HttpComponentsUtil.addParameter(
-						url,
-						_getContentPageEditorPortletNamespace() + "groupId",
-						group.getGroupId());
-
-					return url;
-				}
+				() -> PortletURLBuilder.create(
+					_portal.getControlPanelPortletURL(
+						httpServletRequest, group,
+						ContentPageEditorPortletKeys.
+							CONTENT_PAGE_EDITOR_PORTLET,
+						0, 0, PortletRequest.ACTION_PHASE)
+				).setActionName(
+					"/layout_content_page_editor/add_segments_experience"
+				).setGlobalParameter(
+					_getContentPageEditorPortletNamespace() + "groupId",
+					group.getGroupId()
+				).setGlobalParameter(
+					_getContentPageEditorPortletNamespace() + "p_l_mode",
+					Constants.EDIT
+				).setGlobalParameter(
+					_getContentPageEditorPortletNamespace() + "plid",
+					layout.getPlid()
+				).buildString()
 			).put(
 				"deleteSegmentsExperimentURL",
 				_getSegmentsExperimentActionURL(

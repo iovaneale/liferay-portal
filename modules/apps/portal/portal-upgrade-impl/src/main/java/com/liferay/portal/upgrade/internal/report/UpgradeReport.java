@@ -107,15 +107,26 @@ public class UpgradeReport {
 		warningMessages.put(message, count);
 	}
 
+	public void filterMessages() {
+		for (String filteredClassName : _FILTERED_CLASS_NAMES) {
+			_errorMessages.remove(filteredClassName);
+			_warningMessages.remove(filteredClassName);
+		}
+	}
+
 	public void generateReport(
 		PersistenceManager persistenceManager,
 		ReleaseManagerOSGiCommands releaseManagerOSGiCommands) {
 
+		filterMessages();
+
 		_persistenceManager = persistenceManager;
 
 		try {
+			File reportFile = _getReportFile();
+
 			FileUtil.write(
-				_getReportFile(),
+				reportFile,
 				StringUtil.merge(
 					new String[] {
 						_getDateInfo(), _getUpgradeTimeInfo(),
@@ -129,6 +140,12 @@ public class UpgradeReport {
 								releaseManagerOSGiCommands.check()
 					},
 					StringPool.NEW_LINE + StringPool.NEW_LINE));
+
+			if (_log.isInfoEnabled()) {
+				_log.info(
+					"Upgrade report generated in " +
+						reportFile.getAbsolutePath());
+			}
 		}
 		catch (IOException ioException) {
 			_log.error("Unable to generate the upgrade report", ioException);
@@ -446,7 +463,14 @@ public class UpgradeReport {
 	}
 
 	private File _getReportFile() {
-		File reportsDir = new File(".", "reports");
+		File reportsDir = null;
+
+		if (DBUpgrader.isUpgradeClient()) {
+			reportsDir = new File(".", "reports");
+		}
+		else {
+			reportsDir = new File(PropsValues.LIFERAY_HOME, "reports");
+		}
 
 		if ((reportsDir != null) && !reportsDir.exists()) {
 			reportsDir.mkdirs();
@@ -648,6 +672,11 @@ public class UpgradeReport {
 	private static final String _CONFIGURATION_PID_FILE_SYSTEM_STORE =
 		"com.liferay.portal.store.file.system.configuration." +
 			"FileSystemStoreConfiguration";
+
+	private static final String[] _FILTERED_CLASS_NAMES = {
+		"com.liferay.portal.search.elasticsearch7.internal.sidecar." +
+			"SidecarManager"
+	};
 
 	private static final String _UNDERLINE = "--------------";
 

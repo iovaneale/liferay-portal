@@ -75,6 +75,7 @@ export type UserRole = {
 
 export type TestrayBuild = {
 	active: boolean;
+	buildToTasks: TestrayTask[];
 	caseResultBlocked: string;
 	caseResultFailed: string;
 	caseResultInProgress: string;
@@ -98,6 +99,7 @@ export type TestrayBuild = {
 	r_projectToBuilds_c_project?: TestrayProject;
 	r_routineToBuilds_c_routine?: TestrayRoutine;
 	routine?: TestrayRoutine;
+	tasks: TestrayTask[];
 	template: boolean;
 	templateTestrayBuildId: string;
 };
@@ -235,7 +237,7 @@ export type TestrayRequirementCase = {
 };
 
 export type TestrayRun = {
-	build: TestrayBuild;
+	build?: TestrayBuild;
 	dateCreated: string;
 	dateModified: string;
 	description: string;
@@ -248,7 +250,7 @@ export type TestrayRun = {
 	jenkinsJobKey: string;
 	name: string;
 	number: string;
-	r_buildToRuns_c_build: TestrayBuild;
+	r_buildToRuns_c_build?: TestrayBuild;
 	status: string;
 };
 
@@ -267,6 +269,7 @@ export type TestraySubTask = {
 	r_splitFromTestraySubtask_c_subtask: TestraySubTask;
 	r_taskToSubtasks_c_task: TestrayTask;
 	r_userToSubtasks_user: UserAccount;
+	r_userToSubtasks_userId: number;
 	score: number;
 	splitFromSubtask: TestraySubTask;
 	statusUpdateDate: string;
@@ -324,7 +327,7 @@ export type TestrayTask = {
 	r_buildToTasks_c_build?: TestrayBuild;
 	subtaskScore: string;
 	subtaskScoreCompleted: string;
-	subtaskScoreIncomplete: string;
+	subtaskScoreSelfIncomplete: string;
 };
 
 export type TestrayTaskCaseTypes = {

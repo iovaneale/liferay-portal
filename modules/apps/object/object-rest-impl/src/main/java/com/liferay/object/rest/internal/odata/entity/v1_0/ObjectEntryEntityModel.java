@@ -29,6 +29,7 @@ import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.odata.entity.BooleanEntityField;
 import com.liferay.portal.odata.entity.CollectionEntityField;
 import com.liferay.portal.odata.entity.ComplexEntityField;
@@ -45,6 +46,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+
+import javax.ws.rs.BadRequestException;
 
 /**
  * @author Javier de Arcos
@@ -93,23 +97,13 @@ public class ObjectEntryEntityModel implements EntityModel {
 	}
 
 	private EntityField _getEntityField(ObjectField objectField) {
-		if (objectField.compareBusinessType(
-				ObjectFieldConstants.BUSINESS_TYPE_AGGREGATION) ||
-			objectField.compareBusinessType(
-				ObjectFieldConstants.BUSINESS_TYPE_FORMULA)) {
-
+		if (_unsupportedBusinessTypes.contains(objectField.getBusinessType())) {
 			return null;
 		}
-		else if (Objects.equals(
-					objectField.getBusinessType(),
-					ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT)) {
 
-			return new StringEntityField(
-				objectField.getName(), locale -> objectField.getName());
-		}
-		else if (Objects.equals(
-					objectField.getBusinessType(),
-					ObjectFieldConstants.BUSINESS_TYPE_MULTISELECT_PICKLIST)) {
+		if (Objects.equals(
+				objectField.getBusinessType(),
+				ObjectFieldConstants.BUSINESS_TYPE_MULTISELECT_PICKLIST)) {
 
 			return new CollectionEntityField(
 				new StringEntityField(
@@ -161,7 +155,8 @@ public class ObjectEntryEntityModel implements EntityModel {
 				objectField.getName(), locale -> objectField.getName());
 		}
 
-		return null;
+		throw new BadRequestException(
+			"Unable to get entity field for bject field " + objectField);
 	}
 
 	private ObjectDefinition _getRelatedObjectDefinition(
@@ -274,5 +269,10 @@ public class ObjectEntryEntityModel implements EntityModel {
 	}
 
 	private final Map<String, EntityField> _entityFieldsMap;
+	private final Set<String> _unsupportedBusinessTypes = SetUtil.fromArray(
+		ObjectFieldConstants.BUSINESS_TYPE_AGGREGATION,
+		ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT,
+		ObjectFieldConstants.BUSINESS_TYPE_FORMULA,
+		ObjectFieldConstants.BUSINESS_TYPE_RICH_TEXT);
 
 }

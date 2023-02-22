@@ -39,18 +39,15 @@ import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.odata.filter.FilterParser;
-import com.liferay.portal.odata.filter.FilterParserProvider;
-import com.liferay.portal.odata.filter.expression.BinaryExpression;
-import com.liferay.portal.odata.filter.expression.Expression;
 import com.liferay.segments.configuration.provider.SegmentsConfigurationProvider;
 import com.liferay.segments.criteria.Criteria;
 import com.liferay.segments.criteria.contributor.SegmentsCriteriaContributor;
@@ -58,7 +55,6 @@ import com.liferay.segments.criteria.contributor.SegmentsCriteriaContributorRegi
 import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.provider.SegmentsEntryProviderRegistry;
 import com.liferay.segments.service.SegmentsEntryService;
-import com.liferay.segments.web.internal.odata.ExpressionVisitorImpl;
 import com.liferay.segments.web.internal.security.permission.resource.SegmentsEntryPermission;
 import com.liferay.site.item.selector.criterion.SiteItemSelectorCriterion;
 
@@ -81,7 +77,6 @@ public class EditSegmentsEntryDisplayContext {
 
 	public EditSegmentsEntryDisplayContext(
 		CompanyLocalService companyLocalService,
-		FilterParserProvider filterParserProvider,
 		GroupLocalService groupLocalService,
 		HttpServletRequest httpServletRequest, ItemSelector itemSelector,
 		RenderRequest renderRequest, RenderResponse renderResponse,
@@ -91,7 +86,6 @@ public class EditSegmentsEntryDisplayContext {
 		SegmentsEntryService segmentsEntryService) {
 
 		_companyLocalService = companyLocalService;
-		_filterParserProvider = filterParserProvider;
 		_groupLocalService = groupLocalService;
 		_httpServletRequest = httpServletRequest;
 		_itemSelector = itemSelector;
@@ -276,20 +270,19 @@ public class EditSegmentsEntryDisplayContext {
 		for (SegmentsCriteriaContributor segmentsCriteriaContributor :
 				segmentsCriteriaContributors) {
 
-			Criteria.Criterion criterion =
-				segmentsCriteriaContributor.getCriterion(_getCriteria());
+			JSONObject jsonObject =
+				segmentsCriteriaContributor.getCriteriaJSONObject(
+					_getCriteria());
 
 			contributorsJSONArray.put(
 				JSONUtil.put(
-					"conjunctionId", _getCriterionConjunction(criterion)
+					"conjunctionId", jsonObject.get("conjunctionName")
 				).put(
 					"conjunctionInputId",
 					_renderResponse.getNamespace() + "criterionConjunction" +
 						segmentsCriteriaContributor.getKey()
 				).put(
-					"initialQuery",
-					_getInitialQueryJSONObject(
-						criterion, segmentsCriteriaContributor)
+					"initialQuery", jsonObject.get("query")
 				).put(
 					"inputId",
 					_renderResponse.getNamespace() + "criterionFilter" +
@@ -312,22 +305,6 @@ public class EditSegmentsEntryDisplayContext {
 		}
 
 		return segmentsEntry.getCriteriaObj();
-	}
-
-	private String _getCriterionConjunction(Criteria.Criterion criterion) {
-		if (criterion == null) {
-			return StringPool.BLANK;
-		}
-
-		return criterion.getConjunction();
-	}
-
-	private String _getCriterionFilterString(Criteria.Criterion criterion) {
-		if (criterion == null) {
-			return StringPool.BLANK;
-		}
-
-		return criterion.getFilterString();
 	}
 
 	private String _getDefaultLanguageId() throws Exception {
@@ -367,51 +344,15 @@ public class EditSegmentsEntryDisplayContext {
 	private long _getInitialGroupId() throws PortalException {
 		long groupId = _themeDisplay.getScopeGroupId();
 
+		if (!GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-166954"))) {
+			return groupId;
+		}
+
 		Group group = _groupLocalService.fetchGroup(groupId);
 
-		if (group.isControlPanel()) {
-			Company company = _companyLocalService.getCompany(
-				group.getCompanyId());
+		Company company = _companyLocalService.getCompany(group.getCompanyId());
 
-			return company.getGroupId();
-		}
-
-		return groupId;
-	}
-
-	private JSONObject _getInitialQueryJSONObject(
-			Criteria.Criterion criterion,
-			SegmentsCriteriaContributor segmentsCriteriaContributor)
-		throws Exception {
-
-		String criterionFilterString = _getCriterionFilterString(criterion);
-
-		if (Validator.isNull(criterionFilterString)) {
-			return null;
-		}
-
-		FilterParser filterParser = _filterParserProvider.provide(
-			segmentsCriteriaContributor.getEntityModel());
-
-		Expression expression = filterParser.parse(criterionFilterString);
-
-		JSONObject jsonObject = (JSONObject)expression.accept(
-			new ExpressionVisitorImpl(
-				1, segmentsCriteriaContributor.getEntityModel()));
-
-		if (Validator.isNull(jsonObject.getString("groupId"))) {
-			jsonObject = JSONUtil.put(
-				"conjunctionName",
-				StringUtil.toLowerCase(
-					String.valueOf(BinaryExpression.Operation.AND))
-			).put(
-				"groupId", "group_0"
-			).put(
-				"items", JSONUtil.putAll(jsonObject)
-			);
-		}
-
-		return jsonObject;
+		return company.getGroupId();
 	}
 
 	private JSONObject _getInitialSegmentsNameJSONObject() throws Exception {
@@ -624,7 +565,6 @@ public class EditSegmentsEntryDisplayContext {
 	private String _backURL;
 	private final CompanyLocalService _companyLocalService;
 	private Map<String, Object> _data;
-	private final FilterParserProvider _filterParserProvider;
 	private Long _groupId;
 	private final GroupLocalService _groupLocalService;
 	private final HttpServletRequest _httpServletRequest;

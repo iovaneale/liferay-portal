@@ -80,6 +80,18 @@ public class ListTypeEntryLocalServiceImpl
 	}
 
 	@Override
+	public void deleteListTypeEntryByListTypeDefinitionId(
+		long listTypeDefinitionId) {
+
+		for (ListTypeEntry listTypeEntry :
+				listTypeEntryPersistence.findByListTypeDefinitionId(
+					listTypeDefinitionId)) {
+
+			listTypeEntryLocalService.deleteListTypeEntry(listTypeEntry);
+		}
+	}
+
+	@Override
 	public ListTypeEntry fetchListTypeEntry(
 		long listTypeDefinitionId, String key) {
 
@@ -93,6 +105,15 @@ public class ListTypeEntryLocalServiceImpl
 
 		return listTypeEntryPersistence.fetchByERC_C(
 			externalReferenceCode, companyId);
+	}
+
+	@Override
+	public ListTypeEntry fetchListTypeEntryByExternalReferenceCode(
+		String externalReferenceCode, long companyId,
+		long listTypeDefinitionId) {
+
+		return listTypeEntryPersistence.fetchByERC_C_LTDI(
+			externalReferenceCode, companyId, listTypeDefinitionId);
 	}
 
 	@Override

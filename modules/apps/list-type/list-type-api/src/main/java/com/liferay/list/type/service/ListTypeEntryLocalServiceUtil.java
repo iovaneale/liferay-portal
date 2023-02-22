@@ -123,6 +123,13 @@ public class ListTypeEntryLocalServiceUtil {
 		return getService().deleteListTypeEntry(listTypeEntryId);
 	}
 
+	public static void deleteListTypeEntryByListTypeDefinitionId(
+		long listTypeDefinitionId) {
+
+		getService().deleteListTypeEntryByListTypeDefinitionId(
+			listTypeDefinitionId);
+	}
+
 	/**
 	 * @throws PortalException
 	 */
@@ -233,6 +240,14 @@ public class ListTypeEntryLocalServiceUtil {
 
 		return getService().fetchListTypeEntryByExternalReferenceCode(
 			externalReferenceCode, companyId);
+	}
+
+	public static ListTypeEntry fetchListTypeEntryByExternalReferenceCode(
+		String externalReferenceCode, long companyId,
+		long listTypeDefinitionId) {
+
+		return getService().fetchListTypeEntryByExternalReferenceCode(
+			externalReferenceCode, companyId, listTypeDefinitionId);
 	}
 
 	/**

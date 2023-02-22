@@ -5186,7 +5186,8 @@ public class WikiNodePersistenceImpl
 				if (ercWikiNode != null) {
 					throw new DuplicateWikiNodeExternalReferenceCodeException(
 						"Duplicate wiki node with external reference code " +
-							wikiNode.getExternalReferenceCode());
+							wikiNode.getExternalReferenceCode() +
+								" and group " + wikiNode.getGroupId());
 				}
 			}
 			else {
@@ -5195,7 +5196,8 @@ public class WikiNodePersistenceImpl
 
 					throw new DuplicateWikiNodeExternalReferenceCodeException(
 						"Duplicate wiki node with external reference code " +
-							wikiNode.getExternalReferenceCode());
+							wikiNode.getExternalReferenceCode() +
+								" and group " + wikiNode.getGroupId());
 				}
 			}
 		}
@@ -5694,6 +5696,7 @@ public class WikiNodePersistenceImpl
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
 		Set<String> ctIgnoreColumnNames = new HashSet<String>();
+		Set<String> ctMaxColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
@@ -5708,7 +5711,7 @@ public class WikiNodePersistenceImpl
 		ctIgnoreColumnNames.add("modifiedDate");
 		ctStrictColumnNames.add("name");
 		ctStrictColumnNames.add("description");
-		ctStrictColumnNames.add("lastPostDate");
+		ctMaxColumnNames.add("lastPostDate");
 		ctStrictColumnNames.add("lastPublishDate");
 		ctStrictColumnNames.add("status");
 		ctStrictColumnNames.add("statusByUserId");
@@ -5719,6 +5722,7 @@ public class WikiNodePersistenceImpl
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MAX, ctMaxColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK, Collections.singleton("nodeId"));
 		_ctColumnNamesMap.put(

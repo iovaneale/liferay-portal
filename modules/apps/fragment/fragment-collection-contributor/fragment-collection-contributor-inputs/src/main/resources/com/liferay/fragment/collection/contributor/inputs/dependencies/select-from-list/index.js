@@ -27,6 +27,11 @@ const valueInputElement = document.getElementById(
 	`${fragmentEntryLinkNamespace}-value-input`
 );
 
+if (layoutMode === 'edit') {
+	buttonElement.setAttribute('disabled', true);
+	uiInputElement.setAttribute('disabled', true);
+}
+
 buttonElement.addEventListener('click', toggleDropdown);
 buttonElement.addEventListener('blur', handleResultListBlur);
 uiInputElement.addEventListener('click', toggleDropdown);
@@ -231,11 +236,24 @@ function filterRemoteOptions(query, abortController) {
 	})
 		.then((response) => response.json())
 		.then((result) => {
-			return result.items.map((entry) => ({
-				textContent: entry[input.attributes.relationshipLabelFieldName],
-				textValue: entry[input.attributes.relationshipLabelFieldName],
-				value: `${entry[input.attributes.relationshipValueFieldName]}`,
-			}));
+			return result.items.map((entry) => {
+				let label = entry[input.attributes.relationshipLabelFieldName];
+
+				if (Array.isArray(label)) {
+					label = label.map((label) => label.name).join(', ');
+				}
+				else if (typeof label === 'object') {
+					label = label.name;
+				}
+
+				return {
+					textContent: label,
+					textValue: label,
+					value: `${
+						entry[input.attributes.relationshipValueFieldName]
+					}`,
+				};
+			});
 		});
 }
 

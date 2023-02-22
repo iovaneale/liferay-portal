@@ -404,6 +404,13 @@ public class StructuredContentResourceImpl
 					journalFolder.getUserId(), JournalConstants.RESOURCE_NAME,
 					journalFolder.getGroupId())
 			).put(
+				"createBatch",
+				addAction(
+					ActionKeys.ADD_ARTICLE, journalFolder.getFolderId(),
+					"postStructuredContentFolderStructuredContentBatch",
+					journalFolder.getUserId(), JournalConstants.RESOURCE_NAME,
+					journalFolder.getGroupId())
+			).put(
 				"get",
 				addAction(
 					ActionKeys.VIEW, journalFolder.getFolderId(),
@@ -507,17 +514,17 @@ public class StructuredContentResourceImpl
 			_journalArticleService.updateArticle(
 				journalArticle.getGroupId(), journalArticle.getFolderId(),
 				journalArticle.getArticleId(), journalArticle.getVersion(),
-				LocalizedMapUtil.patch(
+				LocalizedMapUtil.patchLocalizedMap(
 					journalArticle.getTitleMap(),
 					contextAcceptLanguage.getPreferredLocale(),
 					structuredContent.getTitle(),
 					structuredContent.getTitle_i18n()),
-				LocalizedMapUtil.patch(
+				LocalizedMapUtil.patchLocalizedMap(
 					journalArticle.getDescriptionMap(),
 					contextAcceptLanguage.getPreferredLocale(),
 					structuredContent.getDescription(),
 					structuredContent.getDescription_i18n()),
-				LocalizedMapUtil.patch(
+				LocalizedMapUtil.patchLocalizedMap(
 					journalArticle.getFriendlyURLMap(),
 					contextAcceptLanguage.getPreferredLocale(),
 					structuredContent.getFriendlyUrlPath(),
@@ -538,6 +545,7 @@ public class StructuredContentResourceImpl
 				_createServiceContext(
 					_getAssetCategoryIds(journalArticle, structuredContent),
 					_getAssetPriority(journalArticle, structuredContent),
+					_getAssetTagNames(journalArticle, structuredContent),
 					journalArticle.getGroupId(), structuredContent)));
 	}
 
@@ -753,16 +761,17 @@ public class StructuredContentResourceImpl
 				null,
 				_createServiceContext(
 					structuredContent.getTaxonomyCategoryIds(), priority,
-					groupId, structuredContent)));
+					structuredContent.getKeywords(), groupId,
+					structuredContent)));
 	}
 
 	private ServiceContext _createServiceContext(
-		Long[] assetCategoryIds, double assetPriority, long groupId,
-		StructuredContent structuredContent) {
+		Long[] assetCategoryIds, double assetPriority, String[] assetTagNames,
+		long groupId, StructuredContent structuredContent) {
 
 		ServiceContext serviceContext =
 			ServiceContextRequestUtil.createServiceContext(
-				assetCategoryIds, structuredContent.getKeywords(),
+				assetCategoryIds, assetTagNames,
 				_getExpandoBridgeAttributes(structuredContent), groupId,
 				contextHttpServletRequest,
 				structuredContent.getViewableByAsString());
@@ -831,6 +840,27 @@ public class StructuredContentResourceImpl
 			journalArticle.getResourcePrimKey());
 
 		return assetEntry.getPriority();
+	}
+
+	private String[] _getAssetTagNames(
+			JournalArticle journalArticle, StructuredContent structuredContent)
+		throws Exception {
+
+		if ((journalArticle == null) ||
+			(structuredContent.getKeywords() != null)) {
+
+			return structuredContent.getKeywords();
+		}
+
+		AssetRendererFactory<?> assetRendererFactory =
+			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClass(
+				JournalArticle.class);
+
+		AssetEntry assetEntry = assetRendererFactory.getAssetEntry(
+			JournalArticle.class.getName(),
+			journalArticle.getResourcePrimKey());
+
+		return ArrayUtil.toStringArray(assetEntry.getTagNames());
 	}
 
 	private String _getDDMTemplateKey(DDMStructure ddmStructure) {
@@ -1232,6 +1262,7 @@ public class StructuredContentResourceImpl
 				_createServiceContext(
 					_getAssetCategoryIds(journalArticle, structuredContent),
 					_getAssetPriority(journalArticle, structuredContent),
+					_getAssetTagNames(journalArticle, structuredContent),
 					journalArticle.getGroupId(), structuredContent)));
 	}
 

@@ -15,6 +15,7 @@
 import ClayAlert from '@clayui/alert';
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import ClayDropDown, {Align, ClayDropDownWithItems} from '@clayui/drop-down';
+import ClayEmptyState from '@clayui/empty-state';
 import {ClayToggle} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayLabel from '@clayui/label';
@@ -1097,15 +1098,13 @@ export default function ChangeTrackingRenderView({
 
 		if (!filteredNodes.length) {
 			return (
-				<div className="taglib-empty-result-message">
-					<div className="taglib-empty-search-result-message-header" />
-
-					<div className="sheet-text text-center">
-						{Liferay.Language.get(
-							'there-are-no-changes-to-display-in-this-view'
-						)}
-					</div>
-				</div>
+				<ClayEmptyState
+					description={Liferay.Language.get(
+						'there-are-no-changes-to-display-in-this-view'
+					)}
+					imgSrc={`${themeDisplay.getPathThemeImages()}/states/search_state.gif`}
+					title={null}
+				/>
 			);
 		}
 
@@ -1198,14 +1197,26 @@ export default function ChangeTrackingRenderView({
 							<tr>
 								{(state.view === VIEW_LEFT ||
 									state.view === VIEW_SPLIT) && (
-									<td className="publications-render-view-content">
+									<td
+										className={
+											state.view === VIEW_SPLIT
+												? 'publications-render-view-content publications-render-view-content-split'
+												: 'publications-render-view-content'
+										}
+									>
 										{renderPreviewLeft()}
 									</td>
 								)}
 
 								{(state.view === VIEW_RIGHT ||
 									state.view === VIEW_SPLIT) && (
-									<td className="publications-render-view-content">
+									<td
+										className={
+											state.view === VIEW_SPLIT
+												? 'publications-render-view-content publications-render-view-content-split'
+												: 'publications-render-view-content'
+										}
+									>
 										{renderPreviewRight()}
 									</td>
 								)}

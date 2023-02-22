@@ -24,6 +24,7 @@ import com.liferay.expando.kernel.model.ExpandoRow;
 import com.liferay.expando.kernel.model.ExpandoTable;
 import com.liferay.expando.kernel.model.ExpandoTableConstants;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
@@ -71,7 +72,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.service.component.annotations.Reference;
@@ -418,14 +418,11 @@ public abstract class BaseEntityModelListener<T extends BaseModel<T>>
 				try {
 					List<Group> groups = user.getSiteGroups();
 
-					Stream<Group> stream = groups.stream();
-
-					long[] membershipIds = stream.mapToLong(
-						Group::getGroupId
-					).toArray();
-
-					if (membershipIds.length != 0) {
-						memberships.put(Group.class.getName(), membershipIds);
+					if (!groups.isEmpty()) {
+						memberships.put(
+							Group.class.getName(),
+							TransformUtil.transformToLongArray(
+								groups, Group::getGroupId));
 					}
 				}
 				catch (Exception exception) {

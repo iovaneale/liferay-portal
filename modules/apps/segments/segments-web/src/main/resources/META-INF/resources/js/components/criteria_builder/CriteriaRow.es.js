@@ -23,23 +23,25 @@ import React, {Component} from 'react';
 import {DragSource as dragSource, DropTarget as dropTarget} from 'react-dnd';
 
 import ThemeContext from '../../ThemeContext.es';
-import {PROPERTY_TYPES} from '../../utils/constants.es';
+import {
+	PROPERTY_TYPES,
+	SUPPORTED_OPERATORS,
+	SUPPORTED_PROPERTY_TYPES,
+} from '../../utils/constants.es';
 import {DragTypes} from '../../utils/drag-types.es';
-import {unescapeSingleQuotes} from '../../utils/odata.es';
 import {
 	createNewGroup,
-	dateToInternationalHuman,
 	getSupportedOperatorsFromType,
 	objectToFormData,
 } from '../../utils/utils.es';
 import BooleanInput from '../inputs/BooleanInput.es';
 import CollectionInput from '../inputs/CollectionInput.es';
-import DateInput from '../inputs/DateInput.es';
 import DateTimeInput from '../inputs/DateTimeInput.es';
 import DecimalInput from '../inputs/DecimalInput.es';
 import IntegerInput from '../inputs/IntegerInput.es';
 import SelectEntityInput from '../inputs/SelectEntityInput.es';
 import StringInput from '../inputs/StringInput.es';
+import CriteriaRowReadable from './CriteriaRowReadable.es';
 
 const acceptedDragTypes = [DragTypes.CRITERIA_ROW, DragTypes.PROPERTY];
 
@@ -86,8 +88,6 @@ function drop(props, monitor) {
 		index: destIndex,
 		onChange,
 		onMove,
-		supportedOperators,
-		supportedPropertyTypes,
 	} = props;
 
 	const {
@@ -108,8 +108,8 @@ function drop(props, monitor) {
 	const droppedCriterionValue = value || defaultValue;
 
 	const operators = getSupportedOperatorsFromType(
-		supportedOperators,
-		supportedPropertyTypes,
+		SUPPORTED_OPERATORS,
+		SUPPORTED_PROPERTY_TYPES,
 		type
 	);
 
@@ -171,18 +171,14 @@ class CriteriaRow extends Component {
 		onMove: PropTypes.func.isRequired,
 		propertyKey: PropTypes.string.isRequired,
 		renderEmptyValuesErrors: PropTypes.bool,
-		supportedOperators: PropTypes.array,
 		supportedProperties: PropTypes.array,
-		supportedPropertyTypes: PropTypes.object,
 	};
 
 	static defaultProps = {
 		criterion: {},
 		editing: true,
 		renderEmptyValuesErrors: false,
-		supportedOperators: [],
 		supportedProperties: [],
-		supportedPropertyTypes: {},
 	};
 
 	componentDidMount() {
@@ -240,28 +236,6 @@ class CriteriaRow extends Component {
 					onChange({...criterion, displayValue: value});
 				}
 			});
-	};
-
-	_getReadableCriteriaString = ({
-		operatorLabel,
-		propertyLabel,
-		type,
-		value,
-	}) => {
-		const parsedValue =
-			type === PROPERTY_TYPES.DATE || type === PROPERTY_TYPES.DATE_TIME
-				? dateToInternationalHuman(value)
-				: value;
-
-		return (
-			<span>
-				<b className="mr-1 text-dark">{propertyLabel}</b>
-
-				<span className="mr-1 operator">{operatorLabel}</span>
-
-				<b>{unescapeSingleQuotes(parsedValue)}</b>
-			</span>
-		);
 	};
 
 	/**
@@ -347,7 +321,7 @@ class CriteriaRow extends Component {
 		const inputComponentsMap = {
 			[PROPERTY_TYPES.BOOLEAN]: BooleanInput,
 			[PROPERTY_TYPES.COLLECTION]: CollectionInput,
-			[PROPERTY_TYPES.DATE]: DateInput,
+			[PROPERTY_TYPES.DATE]: DateTimeInput,
 			[PROPERTY_TYPES.DATE_TIME]: DateTimeInput,
 			[PROPERTY_TYPES.DOUBLE]: DecimalInput,
 			[PROPERTY_TYPES.ID]: SelectEntityInput,
@@ -366,6 +340,7 @@ class CriteriaRow extends Component {
 				onChange={this._handleTypedInputChange}
 				options={selectedProperty.options}
 				propertyLabel={propertyLabel}
+				propertyType={selectedProperty.type}
 				renderEmptyValueErrors={renderEmptyValuesErrors}
 				selectEntity={selectedProperty.selectEntity}
 				value={value}
@@ -442,18 +417,17 @@ class CriteriaRow extends Component {
 		selectedProperty,
 		value,
 	}) {
-		const {
-			connectDragSource,
-			renderEmptyValuesErrors,
-			supportedOperators,
-			supportedPropertyTypes,
-		} = this.props;
+		const {connectDragSource, renderEmptyValuesErrors} = this.props;
+
+		if (selectedProperty.type === PROPERTY_TYPES.EVENT) {
+			return <div className="edit-container"></div>;
+		}
 
 		const propertyType = selectedProperty ? selectedProperty.type : '';
 
 		const filteredSupportedOperators = getSupportedOperatorsFromType(
-			supportedOperators,
-			supportedPropertyTypes,
+			SUPPORTED_OPERATORS,
+			SUPPORTED_PROPERTY_TYPES,
 			propertyType
 		);
 
@@ -550,14 +524,13 @@ class CriteriaRow extends Component {
 			editing,
 			hover,
 			renderEmptyValuesErrors,
-			supportedOperators,
 			supportedProperties,
 		} = this.props;
 
 		const {unknownEntity} = criterion;
 
 		const selectedOperator = this._getSelectedItem(
-			supportedOperators,
+			SUPPORTED_OPERATORS,
 			criterion.operatorName
 		);
 
@@ -572,7 +545,7 @@ class CriteriaRow extends Component {
 		const warningOnProperty =
 			selectedProperty.options === undefined
 				? false
-				: !selectedProperty.options.length
+				: !selectedProperty.options?.length
 				? false
 				: selectedProperty.options.find((option) => {
 						return (
@@ -585,7 +558,7 @@ class CriteriaRow extends Component {
 
 		if (
 			selectedProperty.options !== undefined &&
-			!!selectedProperty.options.length &&
+			!!selectedProperty.options?.length &&
 			selectedProperty.options.find((option) => {
 				return option.value === value;
 			}) === undefined &&
@@ -598,7 +571,6 @@ class CriteriaRow extends Component {
 			});
 		}
 
-		const operatorLabel = selectedOperator ? selectedOperator.label : '';
 		const propertyLabel = selectedProperty ? selectedProperty.label : '';
 
 		const classes = getCN('criterion-row-root', {
@@ -623,15 +595,11 @@ class CriteriaRow extends Component {
 									value,
 								})
 							) : (
-								<span className="criterion-string">
-									{this._getReadableCriteriaString({
-										error,
-										operatorLabel,
-										propertyLabel,
-										type: selectedProperty.type,
-										value: criterion.displayValue || value,
-									})}
-								</span>
+								<CriteriaRowReadable
+									criterion={criterion}
+									selectedOperator={selectedOperator}
+									selectedProperty={selectedProperty}
+								/>
 							)}
 						</div>
 					)

@@ -75,7 +75,9 @@ public interface SchedulerEngineHelper {
 			String jobName, String groupName, StorageType storageType)
 		throws SchedulerException;
 
-	public void run(String jobName, String groupName, StorageType storageType)
+	public void run(
+			long companyId, String jobName, String groupName,
+			StorageType storageType)
 		throws SchedulerException;
 
 	public void schedule(
@@ -92,9 +94,6 @@ public interface SchedulerEngineHelper {
 
 	public void unschedule(
 			String jobName, String groupName, StorageType storageType)
-		throws SchedulerException;
-
-	public void update(Trigger trigger, StorageType storageType)
 		throws SchedulerException;
 
 }

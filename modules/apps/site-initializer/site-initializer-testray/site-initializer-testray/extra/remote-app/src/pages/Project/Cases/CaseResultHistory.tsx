@@ -37,6 +37,7 @@ const CaseResultHistory: React.FC<CaseResultHistoryProps> = ({
 	return (
 		<ListView
 			managementToolbarProps={{
+				filterSchema: 'buildResultsHistory',
 				title: i18n.translate('test-history'),
 				visible: true,
 			}}
@@ -70,6 +71,7 @@ const CaseResultHistory: React.FC<CaseResultHistoryProps> = ({
 						key: 'run',
 						render: (run) => run?.externalReferencePK,
 						value: i18n.translate('environment'),
+						width: '250',
 					},
 					{
 						clickable: true,
@@ -101,13 +103,8 @@ const CaseResultHistory: React.FC<CaseResultHistoryProps> = ({
 						value: i18n.translate('errors'),
 					},
 				],
-				highlight: (items) => {
-					if (items.id === Number(caseResultId)) {
-						return true;
-					}
-
-					return false;
-				},
+				highlight: (caseResult) =>
+					caseResult.id === Number(caseResultId),
 				responsive: true,
 				rowWrap: true,
 				...tableProps,

@@ -12,39 +12,61 @@
  * details.
  */
 
-type Key = string;
-type Value = string | number | boolean;
+import {RendererFields} from '../components/Form/Renderer';
+import {FilterVariables} from '../schema/filter';
+
 type Filter = {
 	[key: string]: string | number | string[] | number[];
 };
+type Key = string;
+type Value = string | number | boolean;
+
+export type Operators =
+	| 'contains'
+	| 'eq'
+	| 'ge'
+	| 'gt'
+	| 'le'
+	| 'lt'
+	| 'ne'
+	| 'startsWith';
+
+export interface SearchBuilderConstructor {
+	useURIEncode?: boolean;
+}
 
 /**
  * @description
  * Based in the following article https://help.liferay.com/hc/pt/articles/360031163631-Filter-Sort-and-Search
  */
 
-export const searchUtil = {
+export class SearchBuilder {
+	private lock: boolean = false;
+	private query: string = '';
+	private useURIEncode?: boolean = true;
+
+	constructor({useURIEncode}: SearchBuilderConstructor = {}) {
+		this.useURIEncode = useURIEncode;
+	}
 
 	/**
 	 * @description Contains
 	 * @example contains(title,'edmon')
 	 */
 
-	contains: (key: Key, value: Value) => `contains(${key}, '${value}')`,
+	static contains(key: Key, value: Value) {
+		return `contains(${key}, '${value}')`;
+	}
 
-	/**
-	 * @description Equal
-	 * @example addressLocality eq 'Redmond'
-	 */
-
-	eq: (key: Key, value: Value) =>
-		`${key} eq ${typeof value === 'boolean' ? value : `'${value}'`}`,
+	static eq(key: Key, value: Value) {
+		return `${key} eq ${typeof value === 'boolean' ? value : `'${value}'`}`;
+	}
 
 	/**
 	 * @description In [values]
 	 * @example addressLocality in ('London', 'Recife')
 	 */
-	in: (key: Key, values: Value[]) => {
+	static in(key: Key, values: Value[]) {
 		if (values) {
 			const operator = `${key} in ({values})`;
 
@@ -57,26 +79,34 @@ export const searchUtil = {
 		}
 
 		return '';
-	},
+	}
 
 	/**
 	 * @description Not equal
 	 * @example addressLocality ne 'London'
 	 */
-	ne: (key: Key, value: Value) => `${key} ne '${value}'`,
-};
+	static ne(key: Key, value: Value) {
+		return `${key} ne '${value}'`;
+	}
 
-export interface SearchBuilderConstructor {
-	useURIEncode?: boolean;
-}
+	static gt(key: Key, value: Value) {
+		return `${key} gt ${value}`;
+	}
 
-export class SearchBuilder {
-	private lock: boolean = false;
-	private query: string = '';
-	private useURIEncode?: boolean = true;
+	static ge(key: Key, value: Value) {
+		return `${key} ge ${value}`;
+	}
 
-	constructor({useURIEncode}: SearchBuilderConstructor = {}) {
-		this.useURIEncode = useURIEncode;
+	static lt(key: Key, value: Value) {
+		return `${key} lt ${value}`;
+	}
+
+	static le(key: Key, value: Value) {
+		return `${key} le ${value}`;
+	}
+
+	static startsWith(key: Key, value: Value) {
+		return `${key} startsWith '${value}'`;
 	}
 
 	public and() {
@@ -111,40 +141,76 @@ export class SearchBuilder {
 		return _filter;
 	}
 
-	static createFilter(filter: Filter, baseFilters?: string) {
-		const _filter = [baseFilters];
+	static createFilter({
+		appliedFilter,
+		defaultFilter,
+		filterSchema,
+	}: FilterVariables) {
+		const _filter = defaultFilter ? [defaultFilter] : [];
 
-		for (const key in filter) {
-			const value = filter[key];
+		for (const key in appliedFilter) {
+			let searchCondition = '';
+			let value = appliedFilter[key];
 
 			if (!value) {
 				continue;
 			}
+			const schema = filterSchema.fields.find(
+				({name}) => key === name
+			) as RendererFields;
 
-			const _value = Array.isArray(value)
-				? searchUtil.in(key, value)
-				: searchUtil.eq(key, value);
+			const removeQuoteMark =
+				schema.removeQuoteMark || schema.type === 'number';
 
-			_filter.push(_value);
+			const customOperator = schema?.operator;
+
+			if (customOperator && SearchBuilder[customOperator]) {
+				if (schema.type === 'date') {
+					value = new Date(value).toISOString();
+				}
+
+				searchCondition = SearchBuilder[customOperator](
+					key.replace('$', ''),
+					value
+				);
+			}
+			else {
+				searchCondition = Array.isArray(value)
+					? SearchBuilder.in(
+							key,
+							value.map((_value) =>
+								typeof _value === 'object'
+									? _value.value
+									: _value
+							)
+					  )
+					: SearchBuilder.eq(key, value);
+			}
+
+			_filter.push(
+				removeQuoteMark
+					? searchCondition.replaceAll(`'`, '')
+					: searchCondition
+			);
 		}
 
 		return _filter.join(' and ');
 	}
 
 	public contains(key: Key, value: Value) {
-		return this.setContext(searchUtil.contains(key, value));
+		return this.setContext(SearchBuilder.contains(key, value));
 	}
 
 	public eq(key: Key, value: Value) {
-		return this.setContext(searchUtil.eq(key, value));
+		return this.setContext(SearchBuilder.eq(key, value));
 	}
 
 	public in(key: Key, values: Value[]) {
-		return this.setContext(searchUtil.in(key, values));
+		return this.setContext(SearchBuilder.in(key, values));
 	}
 
 	public ne(key: Key, value: Value) {
-		return this.setContext(searchUtil.ne(key, value));
+		return this.setContext(SearchBuilder.ne(key, value));
 	}
 
 	private setContext(query: string) {

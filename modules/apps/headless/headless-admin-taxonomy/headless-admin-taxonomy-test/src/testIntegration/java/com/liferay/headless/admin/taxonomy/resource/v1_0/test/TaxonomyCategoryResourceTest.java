@@ -20,13 +20,16 @@ import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalServiceUtil;
 import com.liferay.asset.test.util.AssetTestUtil;
+import com.liferay.headless.admin.taxonomy.client.dto.v1_0.ParentTaxonomyCategory;
 import com.liferay.headless.admin.taxonomy.client.dto.v1_0.TaxonomyCategory;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 
+import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
@@ -45,6 +48,60 @@ public class TaxonomyCategoryResourceTest
 			UserLocalServiceUtil.getDefaultUserId(testGroup.getCompanyId()),
 			testGroup.getGroupId(), RandomTestUtil.randomString(),
 			new ServiceContext());
+	}
+
+	@Override
+	@Test
+	public void testPatchTaxonomyCategory() throws Exception {
+		super.testPatchTaxonomyCategory();
+
+		// Patch parent taxonomy category
+
+		TaxonomyCategory taxonomyCategory =
+			testPatchTaxonomyCategory_addTaxonomyCategory();
+
+		AssetVocabulary assetVocabulary = _addAssetVocabulary();
+
+		taxonomyCategoryResource.patchTaxonomyCategory(
+			taxonomyCategory.getId(),
+			new TaxonomyCategory() {
+				{
+					taxonomyVocabularyId = assetVocabulary.getVocabularyId();
+				}
+			});
+
+		TaxonomyCategory patchParentTaxonomyCategory =
+			taxonomyCategoryResource.postTaxonomyVocabularyTaxonomyCategory(
+				assetVocabulary.getVocabularyId(), randomTaxonomyCategory());
+
+		TaxonomyCategory patchTaxonomyCategory =
+			taxonomyCategoryResource.patchTaxonomyCategory(
+				taxonomyCategory.getId(),
+				new TaxonomyCategory() {
+					{
+						parentTaxonomyCategory = new ParentTaxonomyCategory() {
+							{
+								setId(
+									Long.valueOf(
+										patchParentTaxonomyCategory.getId()));
+							}
+						};
+					}
+				});
+
+		Assert.assertEquals(
+			patchTaxonomyCategory.getTaxonomyVocabularyId(),
+			Long.valueOf(assetVocabulary.getVocabularyId()));
+
+		ParentTaxonomyCategory parentTaxonomyCategory =
+			patchTaxonomyCategory.getParentTaxonomyCategory();
+
+		Assert.assertEquals(
+			parentTaxonomyCategory.getId(),
+			Long.valueOf(patchParentTaxonomyCategory.getId()));
+
+		// TODO LPS-173137 Two unhappy paths
+
 	}
 
 	@Override
@@ -189,6 +246,13 @@ public class TaxonomyCategoryResourceTest
 		throws Exception {
 
 		return testGetTaxonomyCategory_addTaxonomyCategory();
+	}
+
+	private AssetVocabulary _addAssetVocabulary() throws Exception {
+		return AssetVocabularyLocalServiceUtil.addVocabulary(
+			UserLocalServiceUtil.getDefaultUserId(testGroup.getCompanyId()),
+			testGroup.getGroupId(), RandomTestUtil.randomString(),
+			new ServiceContext());
 	}
 
 	private AssetVocabulary _assetVocabulary;
