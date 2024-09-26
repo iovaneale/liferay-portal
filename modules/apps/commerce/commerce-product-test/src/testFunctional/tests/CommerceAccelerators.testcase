@@ -38,7 +38,7 @@ definition {
 
 		AssertElementNotPresent(locator1 = "CommerceAccelerators#GENERAL_QUANTITY_SELECTOR_INPUT_FIELD_ENABLED");
 
-		CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Catalog");
+		CommerceNavigator.gotoMiniumSidebarItem(menuItem = "calog");
 
 		CommerceAcceleratorsInitializer.gotoMiniumProductDetailsPage(productName = "U-Joint");
 
